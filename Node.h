@@ -24,6 +24,7 @@ class Node{
 
 		Node(int nodeLabel){
 			label = nodeLabel;
+			edges.reserve(1);
 		}
 
 		Node(int nodeLabel, vector<Edge*> connectedEdges){
@@ -41,9 +42,28 @@ class Node{
 			return label == node.label;
 		}
 
-		void addEdge(Edge *edge){
-			edges.push_back(edge);
+		bool operator< (Node node){
+			return label < node.label;
 		}
+
+		friend ostream& operator<< (ostream& out, Node node){
+			out << "Node " << node.label << " connected to " << node.edges.size() << " edges";
+			return out;
+		}
+
+		void addEdge(Edge *edge){
+			if(edges.empty())
+				cout << "Edges' vector of node " << label << " is empty" << endl;
+
+			for (unsigned int i = 0; i < edges.size(); i++)
+			if (*&edges[i] == *&edge){
+				cout << "Edge already added!" << endl;
+				return;
+			}
+			edges.push_back(*&edge);
+			cout << "Edge successfully added to " << label << endl;
+		}
+
 };
 
 int Node::lastLabel = 1;

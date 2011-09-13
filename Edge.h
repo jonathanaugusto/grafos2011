@@ -25,13 +25,32 @@ class Edge{
 		Edge(Node fromNode, Node toNode, int edgeWeight, bool isDir){
 			from = &fromNode;
 			to = &toNode;
-			fromNode.addEdge (this);
-			toNode.addEdge (this);
 			weight = edgeWeight;
 			isDirected = isDir;
+			fromNode.addEdge (&*this);
+			toNode.addEdge (&*this);
+		}
+
+		bool operator== (Edge edge){
+			return ((from == edge.from) && (to = edge.to) && (isDirected == true) && (edge.isDirected == true));
+		}
+
+		bool operator< (Edge edge){
+			return weight < edge.weight;
 		}
 
 
+		friend ostream& operator<< (ostream& out, Edge edge){
+			out << "Edge joining " << edge.from->label << " and " << edge.to->label;
+			if (!edge.isDirected) out << ", undirected";
+			else out << ", directed";
+			out << endl;
+			return out;
+		}
+
 };
+
+
+
 
 #endif
