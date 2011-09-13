@@ -2,11 +2,11 @@
 #define NODE_H
 
 #pragma once // Para resolver a referencia cruzada (Node inclui Edge, que inclui Node...)
-#include "Includes.h"
+class Edge; // Indica que ha' uma classe Node a ser referenciada aqui
+#include "edge.h"
+#include "includes.h"
 
 using namespace std;
-
-class Edge; // Indica que ha' uma classe Edge a ser referenciada aqui
 
 class Node{
 
@@ -14,7 +14,8 @@ class Node{
 		static int lastLabel;
 
 		int label;
-		vector<Edge> *edges;
+		vector<Edge*> edges;
+		bitset<1> flag;
 
 		Node(){
 			if (!lastLabel) label = lastLabel = 1;
@@ -25,7 +26,7 @@ class Node{
 			label = nodeLabel;
 		}
 
-		Node(int nodeLabel, vector<Edge> *connectedEdges){
+		Node(int nodeLabel, vector<Edge*> connectedEdges){
 			label = nodeLabel;
 			edges = connectedEdges;
 		}
@@ -40,9 +41,8 @@ class Node{
 			return label == node.label;
 		}
 
-		void addEdge(Edge edge){
-			if(!(*edges).size()) (*edges).reserve(sizeof(edge));
-			(*edges).push_back(edge);
+		void addEdge(Edge *edge){
+			edges.push_back(edge);
 		}
 };
 

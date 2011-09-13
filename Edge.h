@@ -2,11 +2,11 @@
 #define EDGE_H
 
 #pragma once // Para resolver a referencia cruzada (Node inclui Edge, que inclui Node...)
-#include "Includes.h"
+class Node; // Indica que ha' uma classe Node a ser referenciada aqui
+#include "node.h"
+#include "includes.h"
 
 using namespace std;
-
-class Node; // Indica que ha' uma classe Node a ser referenciada aqui
 
 class Edge{
 
@@ -14,7 +14,7 @@ class Edge{
 		int weight;
 		Node *from, *to;
 		bool isDirected;
-		bool flag;
+		bitset<1> flag;
 
 		Edge(){
 			from = to = NULL;
@@ -22,11 +22,11 @@ class Edge{
 			isDirected = false;
 		}
 
-		Edge(Node *fromNode, Node *toNode, int edgeWeight, bool isDir){
-			from = fromNode;
-			to = toNode;
-			(*fromNode).addEdge (this);
-			(*toNode).addEdge (this);
+		Edge(Node fromNode, Node toNode, int edgeWeight, bool isDir){
+			from = &fromNode;
+			to = &toNode;
+			fromNode.addEdge (this);
+			toNode.addEdge (this);
 			weight = edgeWeight;
 			isDirected = isDir;
 		}
