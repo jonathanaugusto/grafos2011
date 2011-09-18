@@ -4,17 +4,18 @@
 #pragma once  // Para resolver a referencia cruzada (Node inclui Edge, que inclui Node...)
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <stack>
 #include <queue>
-#include <set>
 #include <bitset>
 #include <cstdlib>
-#include <initializer_list>
 #include <list>
 #include <algorithm>
 #include <utility>
+#include <ctime>
+
 #include "edge.h"
 #include "node.h"
 #include "graph.h"

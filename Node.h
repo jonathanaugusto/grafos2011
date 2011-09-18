@@ -3,8 +3,8 @@
 
 #pragma once // Para resolver a referencia cruzada (Node inclui Edge, que inclui Node...)
 class Edge; // Indica que ha' uma classe Node a ser referenciada aqui
-#include "edge.h"
-#include "includes.h"
+#include "Edge.h"
+#include "Includes.h"
 
 using namespace std;
 
@@ -24,7 +24,6 @@ class Node{
 
 		Node(int nodeLabel){
 			label = nodeLabel;
-			edges.reserve(1);
 		}
 
 		Node(int nodeLabel, vector<Edge*> connectedEdges){
@@ -47,24 +46,19 @@ class Node{
 		}
 
 		friend ostream& operator<< (ostream& out, Node node){
-			out << "Node " << node.label << " connected to " << node.edges.size() << " edges";
+			out << "n" << node.label << " (d=" << node.edges.size() << ")";
 			return out;
 		}
 
-		void addEdge(Edge *edge){
-			if(edges.empty())
-				cout << "Edges' vector of node " << label << " is empty" << endl;
+		void addEdge(Edge*);
+		// defined in Edge.h
 
-			for (unsigned int i = 0; i < edges.size(); i++)
-			if (*&edges[i] == *&edge){
-				cout << "Edge already added!" << endl;
-				return;
-			}
-			edges.push_back(*&edge);
-			cout << "Edge successfully added to " << label << endl;
-		}
+		void printEdges();
+		// defined in Edge.h
 
 };
+
+
 
 int Node::lastLabel = 1;
 
