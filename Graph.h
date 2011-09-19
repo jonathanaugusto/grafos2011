@@ -5,13 +5,14 @@
 
 using namespace std;
 
+typedef struct bitset<1> Adjacency;
+
 class Graph{
 
 	public:
 		vector<Node> g_nodes;
 		vector<Edge> g_edges;
-		vector< bitset<1> > adjMatrix; // bitset<N> indica uma lista onde cada posicao contem N bits
-		vector< list<int> > adjList;
+		Adjacency** adjMatrix;
 
 		Graph(){
 			g_nodes.reserve(0);
@@ -45,8 +46,6 @@ class Graph{
 				node_d[g_nodes[i].edges.size()] ++;
 			for (int i = 1; i <= getNodesNumber()-1; i++)
 				node_d[i] /= getNodesNumber();
-			for (int i = 1; i <= getNodesNumber()-1; i++)
-				cout << i << " " << node_d[i] << endl;
 
 		}
 		// Funcoes para construcao dos itens do grafo
@@ -118,14 +117,38 @@ class Graph{
 			float nodeDegrees[getNodesNumber()];
 			getEmpiricDistribution(nodeDegrees);
 
-			for (unsigned int i = 1; i <= getNodesNumber()-1; i++)
+			for (int i = 1; i <= getNodesNumber()-1; i++)
 				file << i << " " << nodeDegrees[i] << endl;
 
 		}
-		vector< bitset<1> > buildAdjMatrix(){
+		void buildAdjMatrix (Adjacency **adjm){
 			// "Entrada": o proprio grafo que chama a funcao para si mesmo
 			// Saida:  matriz de adjacencia do grafo
 
+			adjm = new Adjacency*[getNodesNumber()+1];
+
+			for (int i = 0; i < getNodesNumber()+1; i++){
+				adjm[i] = new Adjacency[getNodesNumber()+1];
+				for (int j = 0; j < getNodesNumber()+1; j++)
+				adjm[i][j].reset();
+			}
+
+			for (int i = 0; i < getEdgesNumber(); i++){
+				cout << "atga" << endl;
+					adjm[g_edges[i].from->label][g_edges[i].to->label].set();
+					adjm[g_edges[i].to->label][g_edges[i].from->label].set();
+				}
+
+			adjMatrix = adjm;
+
+		}
+
+		bool testAdjacency (int node1, int node2){
+			if (node1 == node2){
+				cout << "Nodes are same" << endl;
+				return false;
+			}
+			return adjMatrix[node1][node2].any();
 		}
 
 		void buildAdjList(vector<int> *);
