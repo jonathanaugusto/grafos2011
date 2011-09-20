@@ -117,7 +117,7 @@ class Edge{
  */
 void Node::addEdge(Edge *edge){
 
-	for (unsigned unsigned long int i = 0; i < edges.size(); i++)
+	for (unsigned long int i = 0; i < edges.size(); i++)
 		if (*edges[i] == *edge) return;
 
 	edges.push_back(edge);
@@ -129,7 +129,7 @@ void Node::addEdge(Edge *edge){
  */
 void Node::printEdges (){
 		cout << "Edges connected to node " <<  label << ":" << endl;
-		for (unsigned unsigned long int i = 0; i < edges.size(); i++){
+		for (unsigned long int i = 0; i < edges.size(); i++){
 			cout << *edges[i] << endl;
 		}
 		cout << endl;
