@@ -25,7 +25,7 @@ class Edge{
 		/**
 		 * @brief Value of edge weight.
 		 */
-		int weight;
+		unsigned long int weight;
 
 		/**
 		 * @brief Pointers to the nodes connected.
@@ -51,7 +51,7 @@ class Edge{
 		 * @param	edgeWeight	Value of edge weight.
 		 * 			isDir		Flag for (un)directed edge.
 		 */
-		Edge(int edgeWeight, bool isDir){
+		Edge(unsigned long int edgeWeight, bool isDir){
 
 			weight = edgeWeight;
 			isDirected = isDir;
@@ -65,7 +65,7 @@ class Edge{
 		 * 			edgeWeight	Value of edge weight.
 		 * 			isDir		Flag for (un)directed edge.
 		 */
-		Edge(Node *fromNode, Node *toNode, int edgeWeight, bool isDir){
+		Edge(Node *fromNode, Node *toNode, unsigned long int edgeWeight, bool isDir){
 
 			weight = edgeWeight;
 			isDirected = isDir;
@@ -117,7 +117,7 @@ class Edge{
  */
 void Node::addEdge(Edge *edge){
 
-	for (unsigned int i = 0; i < edges.size(); i++)
+	for (unsigned unsigned long int i = 0; i < edges.size(); i++)
 		if (*edges[i] == *edge) return;
 
 	edges.push_back(edge);
@@ -129,7 +129,7 @@ void Node::addEdge(Edge *edge){
  */
 void Node::printEdges (){
 		cout << "Edges connected to node " <<  label << ":" << endl;
-		for (unsigned int i = 0; i < edges.size(); i++){
+		for (unsigned unsigned long int i = 0; i < edges.size(); i++){
 			cout << *edges[i] << endl;
 		}
 		cout << endl;

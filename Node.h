@@ -25,7 +25,7 @@ class Node{
 		/**
 		 * @brief Unique identifier of a node.
 		 */
-		int label;
+		unsigned long int label;
 
 		/**
 		 * @brief Vector that stores pointers to
@@ -43,7 +43,7 @@ class Node{
 		 * @brief Constructor for class Node.
 		 * @param nodeLabel		Identifier for object.
 		 */
-		Node(int nodeLabel){
+		Node(unsigned long int nodeLabel){
 			label = nodeLabel;
 		}
 
@@ -53,7 +53,7 @@ class Node{
 		 * @param connectedEdges	Vector of pointers to
 		 * 							edges connected to this.
 		 */
-		Node(int nodeLabel, vector<Edge*> connectedEdges){
+		Node(unsigned long int nodeLabel, vector<Edge*> connectedEdges){
 			label = nodeLabel;
 			edges = connectedEdges;
 		}
