@@ -1,54 +1,110 @@
+/**
+ * Universidade Federal do Rio de Janeiro
+ * COS242 - Teoria dos Grafos
+ * @descr	Trabalho pratico da disciplina - Parte 1
+ * @author	Bruno Tomas / Jonathan Augusto
+ */
+
 #ifndef GRAPH_H
 #define GRAPH_H
 
 #include "Includes.h"
 
+/**
+ * @brief Definition of as adjacency matrix.
+ */
 typedef struct vector< vector<bool> > AdjacencyMatrix;
+
+/**
+ * @brief Definition of as adjacency list.
+ */
 typedef struct vector< set<unsigned long long> > AdjacencyList;
 
-using namespace rel_ops;
 using namespace std;
 
+/* Declares template functions of all relational operators
+ * deriving their behavior from operator== and operator< .
+ */
+using namespace rel_ops;
+
+/**
+ * @brief Sorts connected components by size (decreasingly)
+ */
 bool sortBySize (set<unsigned long long> set1, set<unsigned long long> set2){
 	if  (set1.size() > set2.size()) return true;
 	return false;
 }
 
 
+/**
+ * @brief Abstraction of a graph.
+ */
 class Graph{
 
 	public:
-		vector<Node> g_nodes;
-		vector<Edge> g_edges;
-		AdjacencyMatrix *adjMatrix;
-		AdjacencyList *adjList;
 
+		/**
+	 	 * @brief Vector of graph nodes.
+	 	 */
+		vector<Node> g_nodes;
+
+		/**
+	 	 * @brief Vector of graph edges.
+	 	 */
+		vector<Edge> g_edges;
+
+		/**
+	 	 * @brief Constructor of an empty graph.
+	 	 */
 		Graph(){
 			g_nodes.reserve(0);
 			g_edges.reserve(0);
 		}
 
+		/**
+	 	 * @brief Constructor of a graph reserving
+	 	 * space for a given numbers of edges and of nodes.
+	 	 * @param	nodes_n	Number of nodes.
+	 	 * @param	edges_n	Number of edges.
+	 	 */
 		Graph (unsigned long long nodes_n, unsigned long long edges_n){
 			g_nodes.reserve(nodes_n);
 			g_edges.reserve(edges_n);
 		}
 
+		/**
+		 * @brief Returns number of edges in graph.
+		 */
 		unsigned long long getEdgesNumber(){
 			return g_edges.size();
 		}
 
+		/**
+		 * @brief Returns number of nodes in graph.
+		 * g_nodes[0] is not used to allow access
+		 * to g_nodes by label number.
+		 */
 		unsigned long long getNodesNumber(){
 			return g_nodes.size()-1;
 		}
 
+		/**
+		 * @brief Calculates medium degree of a graph.
+		 */
 		float getMediumDegree(){
 			unsigned long long medium_d = 0;
 			for (unsigned long long i = 1; i <= g_nodes.size(); i++) medium_d += g_nodes[i].edges.size();
 			return (medium_d / getNodesNumber());
 		}
 
-		void getEmpiricDistribution(float* node_d){
+		/**
+		 * @brief Calculates and returns empirical
+		 * distribution for degrees of nodes.
+		 *
+		 */
+		float* getEmpiricalDistribution(){
 
+			float *node_d = new float[getNodesNumber()];
 			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
 				node_d[i] = 0.0;
 			for (unsigned long long i = 1; i <= getNodesNumber(); i++)
@@ -56,8 +112,12 @@ class Graph{
 			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
 				node_d[i] /= getNodesNumber();
 
+			return node_d;
 		}
 
+		/**
+		 * @brief Overload of relational operator.
+		 */
 		bool operator== (Graph graph){
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				if (g_nodes[i] != graph.g_nodes[i]) return false;
@@ -66,11 +126,14 @@ class Graph{
 			return true;
 		}
 
-		// Funcoes para construcao dos itens do grafo
 
+		/**
+		 * @brief Build graph from description file
+		 * (Line with number of nodes and then each line
+		 * with an edge)
+		 * @param filename	String containing filename.
+		 */
 		void buildGraph(string filename){
-			// Entrada: string contendo o nome do arquivo do qual sera construido o grafo
-			// "Saida": o proprio grafo alterado
 
 			cout << ":: CREATE GRAPH ::" << endl;
 
@@ -129,6 +192,14 @@ class Graph{
 			file.close();
 		}
 
+
+		/**
+		 * @brief Build information file of a graph,
+		 * containing nodes' and edges' number,
+		 * medium degree etc.
+		 * @param filename	String containing filename
+		 * 					(it will be concatenated with "info_")
+		 */
 		void buildInformationFile (string filename){
 			// "Entrada": o proprio grafo que chama a funcao para si mesmo
 			// "Saida": arquivo contendo as informacoes constantes do enunciado do trabalho (nada e' retornado pela funcao)
@@ -139,8 +210,7 @@ class Graph{
 			file << "# m = " << getNodesNumber() << endl;
 			file << "# d_medio = " << getMediumDegree() << endl;
 
-			float nodeDegrees[getNodesNumber()];
-			getEmpiricDistribution(nodeDegrees);
+			float *nodeDegrees = getEmpiricalDistribution();
 
 			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
 				file << i << " " << nodeDegrees[i] << endl;
@@ -148,6 +218,10 @@ class Graph{
 			file.flush();
 			file.close();
 		}
+
+		/**
+		 * @brief Builds and returns adjacency matrix of a graph.
+		 */
 		AdjacencyMatrix buildAdjMatrix (){
 				// "Entrada": o proprio grafo que chama a funcao para si mesmo
 				// Saida:  matriz de adjacencia do grafo
@@ -170,10 +244,16 @@ class Graph{
 			time(&end);
 			cout << "Time: " << difftime (end, start) << " seconds" << endl;
 			cout << "RAM: " << getNodesNumber()*getNodesNumber()/8 << " bytes" << endl;
-			adjMatrix = &adjm;
+
 			return adjm;
 		}
 
+		/**
+		 * @brief Test adjacency between two nodes using adjacency matrix.
+		 * @param	adjm	Adjacency matrix.
+		 * @param	node1	Label of a node.
+		 * @param	node2 	Label of the other node.
+		 */
 		bool testAdjacency (AdjacencyMatrix adjm, unsigned long long node1, unsigned long long node2){
 			if (node1 == node2){
 				cout << "Nodes are same" << endl;
@@ -182,6 +262,9 @@ class Graph{
 			return adjm[node1][node2];
 		}
 
+		/**
+		 * @brief Builds and returns adjacency list of a graph.
+		 */
 		AdjacencyList buildAdjList(){
 
 			cout << ":: CREATE ADJACENCY LIST ::" << endl;
@@ -213,11 +296,16 @@ class Graph{
 
 			cout << "Time: " << difftime (end, start) << " seconds" << endl;
 			cout << "RAM: " << total << " bytes" << endl;
-			adjList = &adjl;
+
 			return adjl;
 		}
 
-
+		/**
+		 * @brief Test adjacency between two nodes using adjacency list.
+		 * @param	adjl	Adjacency list.
+		 * @param	node1	Label of a node.
+		 * @param	node2 	Label of the other node.
+		 */
 		bool testAdjacency (AdjacencyList adjl, unsigned long long node1, unsigned long long node2){
 			if (node1 == node2){
 				cout << "Nodes are same" << endl;
@@ -230,16 +318,15 @@ class Graph{
 			return true;
 		}
 
-
-		// Funcoes de busca
-
-		void bfs(unsigned long long initialNode, string filename){
-
-
-
-		}
-
-		set<unsigned long long> bfs(AdjacencyMatrix &adjm, unsigned long long initialNode, string filename){
+		/**
+		 * @brief Breadth-first search using adjacency matrix.
+		 * Returns the connected component found.
+		 * @param	adjl			Reference to adjacency matrix.
+		 * @param	startingNode	Label of starting node.
+		 * @param	filename		Filename where search tree will be written
+		 * 							(it will be concatenated with "bfsm_")
+		 */
+		set<unsigned long long> bfs(AdjacencyMatrix &adjm, unsigned long long startingNode, string filename){
 
 			cout << ":: BFS USING ADJACENCY MATRIX ::" << endl;
 			ofstream file ("bfsm_"+filename, ifstream::out);
@@ -255,13 +342,13 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				set[i][2] = false; // node flag
 
-			cout << "Initial node: " << initialNode << endl;
+			cout << "Starting node: " << startingNode << endl;
 
-			adjm[initialNode][0] = true;
-			set[initialNode][1] = 0;
-			searchQueue.push(initialNode);
+			adjm[startingNode][0] = true;
+			set[startingNode][1] = 0;
+			searchQueue.push(startingNode);
 
-			file << "n: " << initialNode << "\troot\tlevel: " << set[initialNode][1] << endl;
+			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
 
 			while (!searchQueue.empty()){
 
@@ -293,7 +380,15 @@ class Graph{
 			return connected;
 		}
 
-		set<unsigned long long> bfs(AdjacencyList &adjl, unsigned long long initialNode, string filename){
+		/**
+		 * @brief Breadth-first search using adjacency list.
+		 * Returns the connected component found.
+		 * @param	adjl			Reference to adjacency list.
+		 * @param	startingNode	Label of starting node.
+		 * @param	filename		Filename where search tree will be written
+		 * 							(it will be concatenated with "bfsl_")
+		 */
+		set<unsigned long long> bfs(AdjacencyList &adjl, unsigned long long startingNode, string filename){
 
 			//cout << ":: BFS USING ADJACENCY LIST ::" << endl;
 			ofstream file ("bfsl_"+filename, ifstream::out);
@@ -311,13 +406,13 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				set[i][2] = 0; // node flag
 
-			//cout << "Initial node: " << initialNode << endl;
+			//cout << "Starting node: " << startingNode << endl;
 
-			set[initialNode][2] = 1;
-			set[initialNode][1] = 0;
-			searchQueue.push(initialNode);
+			set[startingNode][2] = 1;
+			set[startingNode][1] = 0;
+			searchQueue.push(startingNode);
 
-			file << "n: " << initialNode << "\troot\tlevel: " << set[initialNode][1] << endl;
+			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
 
 			while (!searchQueue.empty()){
 
@@ -351,7 +446,16 @@ class Graph{
 			return connected;
 		}
 
-		set<unsigned long long> dfs(AdjacencyMatrix &adjm, unsigned long long initialNode, string filename){
+
+		/**
+		 * @brief Depth-first search using adjacency matrix.
+		 * Returns the connected component found.
+		 * @param	adjm			Reference to adjacency matrix.
+		 * @param	startingNode	Label of starting node.
+		 * @param	filename		Filename where search tree will be written
+		 * 							(it will be concatenated with "dfsm_")
+		 */
+		set<unsigned long long> dfs(AdjacencyMatrix &adjm, unsigned long long startingNode, string filename){
 
 
 			//cout << ":: DFS USING ADJACENCY MATRIX ::" << endl;
@@ -369,12 +473,12 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				adjm[i][0] = false; // node flag
 
-			//cout << "Initial node: " << initialNode << endl;
+			//cout << "Starting node: " << startingNode << endl;
 
-			set[initialNode][1] = 0;
-			searchStack.push(initialNode);
+			set[startingNode][1] = 0;
+			searchStack.push(startingNode);
 
-			file << "n: " << initialNode << "\troot\tlevel: " << set[initialNode][1] << endl;
+			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
 
 			while (!searchStack.empty()){
 
@@ -410,7 +514,15 @@ class Graph{
 
 		}
 
-		set<unsigned long long> dfs(AdjacencyList &adjl, unsigned long long initialNode, string filename){
+		/**
+		 * @brief Depth-first search using adjacency list.
+		 * Returns the connected component found.
+		 * @param	adjl			Reference to adjacency lsit.
+		 * @param	startingNode	Label of starting node.
+		 * @param	filename		Filename where search tree will be written
+		 * 							(it will be concatenated with "dfsl_")
+		 */
+		set<unsigned long long> dfs(AdjacencyList &adjl, unsigned long long startingNode, string filename){
 
 			cout << ":: DFS USING ADJACENCY LIST ::" << endl;
 			ofstream file ("dfsl_"+filename, ifstream::out);
@@ -427,12 +539,12 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				set[i][2] = 0; // node flag
 
-			cout << "Initial node: " << initialNode << endl;
+			cout << "Starting node: " << startingNode << endl;
 
-			set[initialNode][1] = 0;
-			searchStack.push(initialNode);
+			set[startingNode][1] = 0;
+			searchStack.push(startingNode);
 
-			file << "n: " << initialNode << "\troot\tlevel: " << set[initialNode][1] << endl;
+			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
 
 			while (!searchStack.empty()){
 
@@ -469,12 +581,17 @@ class Graph{
 			return connected;
 		}
 
+		/**
+		 * @brief Found all connected component in graph using adjacency list.
+		 * @param	adjl		Adjacency list.
+		 * @param	filename	Filename where search tree will be written
+		 * 							(it will be concatenated with "dfsm_")
+		 */
 		void foundConnectedComponents (AdjacencyList adjl, string filename){
 
 			cout << ":: FOUND CONNECTED COMPONENTS ::" << endl;
 			ofstream file ("cc_"+filename, ifstream::out);
 			string fn;
-			set <set<unsigned long long> > components;
 			set<unsigned long long> component{};
 			list <set<unsigned long long> > sortedComponents;
 
@@ -486,10 +603,12 @@ class Graph{
 				for (set<unsigned long long>::iterator it = component.find(i); i == *it; i++, *it++);
 				if (i > getNodesNumber()) break;
 				component = bfs(adjl,i,filename);
-				components.insert(component);
-				if (!(components.size() % 200)) cout << components.size() <<" components found\n";
+				sortedComponents.push_back(component);
+				sortedComponents.sort(sortBySize);
+				sortedComponents.unique();
+				if (!(sortedComponents.size() % 200)) cout << sortedComponents.size() <<" components found\n";
 			}
-			cout << components.size() <<" components found\n";
+			cout << sortedComponents.size() <<" components found\n";
 
 			time(&end);
 			cout << "Time: " << difftime (end, start) << " seconds" << endl;
@@ -499,12 +618,10 @@ class Graph{
 				for (set<unsigned long long>::iterator it2 = it->begin(); it2 != it->end(); it2++)
 					cout << *it2 << " ";
 				cout << endl;
-			}*/
-
-			for (set <set<unsigned long long> >::iterator it = components.begin(); it != components.end(); it++){
-				sortedComponents.push_back(*it);
-				sortedComponents.sort(sortBySize);
 			}
+			 */
+
+			cout << "Writing file..." << endl;
 
 			file << sortedComponents.size() << endl;
 

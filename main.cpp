@@ -1,3 +1,10 @@
+/**
+ * Universidade Federal do Rio de Janeiro
+ * COS242 - Teoria dos Grafos
+ * @descr	Trabalho pratico da disciplina - Parte 1
+ * @author	Bruno Tomas / Jonathan Augusto
+ */
+
 #include "Includes.h"
 
 using namespace std;
@@ -25,6 +32,8 @@ int main(int argc, char *argv[])
 	grafo.dfs(adjm,10,argv[1]);
 	grafo.dfs(adjl,10,argv[1]);
 	grafo.foundConnectedComponents(adjl,argv[1]);
+
+	cout << "All done! :D" << endl;
 
 	system ("PAUSE");
     return 0;
