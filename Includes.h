@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <vector>
 #include <string>
 #include <stack>
@@ -12,13 +13,14 @@
 #include <bitset>
 #include <cstdlib>
 #include <list>
+#include <set>
 #include <algorithm>
 #include <utility>
 #include <ctime>
 
-#include "edge.h"
-#include "node.h"
-#include "graph.h"
+#include "Edge.h"
+#include "Node.h"
+#include "Graph.h"
 
 
 #endif /* INCLUDES_H_ */

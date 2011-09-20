@@ -37,11 +37,16 @@ class Node{
 			return *this;
 		}
 
-		bool operator== (Node node){
+		bool operator== (Node node) const{
 			return label == node.label;
 		}
+/*
+		bool operator!= (Node node){
+			if (this==node) return false;
+			return true;
+		}*/
 
-		bool operator< (Node node){
+		bool operator< (Node node) const{
 			return label < node.label;
 		}
 

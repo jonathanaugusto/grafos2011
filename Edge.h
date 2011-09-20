@@ -36,11 +36,11 @@ class Edge{
 			this->addNodes(fromNode, toNode);
 		}
 
-		bool operator== (Edge edge){
+		bool operator== (Edge edge) const{
 			return ((*from == *(edge.from)) && (*to == *(edge.to)) && (isDirected == false) && (edge.isDirected == false));
 		}
 
-		bool operator< (Edge edge){
+		bool operator< (Edge edge) const{
 			return ((*from == *(edge.from)) && (*to == *(edge.to)) && ((weight < edge.weight)));
 		}
 
