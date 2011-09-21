@@ -35,7 +35,6 @@ bool sortBySize (set<unsigned long long> set1, set<unsigned long long> set2){
 	return false;
 }
 
-
 /**
  * @brief Abstraction of a graph.
  */
@@ -392,7 +391,7 @@ class Graph{
 
 			cout << ":: BFS USING ADJACENCY LIST ::" << endl;
 			ofstream file ("bfsl_"+filename, ifstream::out);
-
+			ofstream file2 ("majorlevel", ifstream::app);
 			queue<unsigned long long> searchQueue;
 			unsigned long long set[getNodesNumber()+1][3]; // [0] to dad node; [1] to node level; [2] to flag
 			std::set<unsigned long long> connected;
@@ -437,12 +436,19 @@ class Graph{
 			time(&end);
 			cout << "Time: " << difftime (end, start) << " seconds" << endl;
 
+			unsigned int majorLevel = 0;
 			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
-				if ((set[i][2] == 1)&&(set[i][1] > 0))
+				if ((set[i][2] == 1)&&(set[i][1] > 0)){
 					file << "n: " << i <<"\tdad: " << set[i][0] <<  "\tlevel: " << set[i][1] << endl;
+					if (set[i][1] > majorLevel) majorLevel = set[i][1];
+				}
+
+			file2 << "initial: " << startingNode << " | major level: " << majorLevel << endl;
 
 			file.flush();
 			file.close();
+			file2.flush();
+			file2.close();
 			return connected;
 		}
 
@@ -629,6 +635,5 @@ class Graph{
 		}
 
 };
-
 
 #endif

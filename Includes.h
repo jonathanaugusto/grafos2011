@@ -29,5 +29,4 @@
 #include "Node.h"
 #include "Graph.h"
 
-
 #endif /* INCLUDES_H_ */
