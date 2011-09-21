@@ -105,11 +105,11 @@ class Graph{
 		float* getEmpiricalDistribution(){
 
 			float *node_d = new float[getNodesNumber()];
-			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
+			for (unsigned long long i = 0; i < getNodesNumber(); i++)
 				node_d[i] = 0.0;
 			for (unsigned long long i = 1; i <= getNodesNumber(); i++)
 				node_d[g_nodes[i].edges.size()] ++;
-			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
+			for (unsigned long long i = 0; i < getNodesNumber(); i++)
 				node_d[i] /= getNodesNumber();
 
 			return node_d;
@@ -212,8 +212,8 @@ class Graph{
 
 			float *nodeDegrees = getEmpiricalDistribution();
 
-			for (unsigned long long i = 1; i <= getNodesNumber()-1; i++)
-				file << i << " " << nodeDegrees[i] << endl;
+			for (unsigned long long i = 0; i < getNodesNumber()-1; i++)
+				if (nodeDegrees[i]!= 0) file << i << " " << nodeDegrees[i] << endl;
 
 			file.flush();
 			file.close();
@@ -290,7 +290,7 @@ class Graph{
 			time(&end);
 
 			unsigned long long total = 0;
-			for (unsigned long long i = 0; i < adjl[i].size(); i++){
+			for (unsigned long long i = 0; i < adjl.size(); i++){
 				total += adjl[i].size()*sizeof(unsigned long long);
 			}
 
@@ -340,7 +340,7 @@ class Graph{
 			time(&start);
 
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
-				set[i][2] = false; // node flag
+				adjm[i][0] = false; // node flag
 
 			cout << "Starting node: " << startingNode << endl;
 
@@ -390,7 +390,7 @@ class Graph{
 		 */
 		set<unsigned long long> bfs(AdjacencyList &adjl, unsigned long long startingNode, string filename){
 
-			//cout << ":: BFS USING ADJACENCY LIST ::" << endl;
+			cout << ":: BFS USING ADJACENCY LIST ::" << endl;
 			ofstream file ("bfsl_"+filename, ifstream::out);
 
 			queue<unsigned long long> searchQueue;
@@ -406,7 +406,7 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				set[i][2] = 0; // node flag
 
-			//cout << "Starting node: " << startingNode << endl;
+			cout << "Starting node: " << startingNode << endl;
 
 			set[startingNode][2] = 1;
 			set[startingNode][1] = 0;
@@ -435,7 +435,7 @@ class Graph{
 
 
 			time(&end);
-			//cout << "Time: " << difftime (end, start) << " seconds" << endl;
+			cout << "Time: " << difftime (end, start) << " seconds" << endl;
 
 			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
 				if ((set[i][2] == 1)&&(set[i][1] > 0))
@@ -458,7 +458,7 @@ class Graph{
 		set<unsigned long long> dfs(AdjacencyMatrix &adjm, unsigned long long startingNode, string filename){
 
 
-			//cout << ":: DFS USING ADJACENCY MATRIX ::" << endl;
+			cout << ":: DFS USING ADJACENCY MATRIX ::" << endl;
 			ofstream file ("dfsm_"+filename, ifstream::out);
 
 			stack<unsigned long long> searchStack;
@@ -473,7 +473,7 @@ class Graph{
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				adjm[i][0] = false; // node flag
 
-			//cout << "Starting node: " << startingNode << endl;
+			cout << "Starting node: " << startingNode << endl;
 
 			set[startingNode][1] = 0;
 			searchStack.push(startingNode);
@@ -500,7 +500,7 @@ class Graph{
 			}
 
 			time(&end);
-			//cout << "Time: " << difftime (end, start) << " seconds" << endl;
+			cout << "Time: " << difftime (end, start) << " seconds" << endl;
 
 			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
 				if ((adjm[i][0] == 1)&&(set[i][1] > 0))
@@ -612,14 +612,6 @@ class Graph{
 
 			time(&end);
 			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-
-			/*for (set <set<unsigned long long> >::iterator it = components.begin(); it != components.end(); it++){
-				cout << "Component > ";
-				for (set<unsigned long long>::iterator it2 = it->begin(); it2 != it->end(); it2++)
-					cout << *it2 << " ";
-				cout << endl;
-			}
-			 */
 
 			cout << "Writing file..." << endl;
 

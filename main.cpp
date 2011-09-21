@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
 		system ("PAUSE");
 		return 0;
 	}
-
 	Graph grafo;
 	AdjacencyMatrix adjm;
 	AdjacencyList adjl;
@@ -27,11 +26,15 @@ int main(int argc, char *argv[])
 	adjm = grafo.buildAdjMatrix ();
 	adjl = grafo.buildAdjList ();
 
-	grafo.bfs(adjm,10,argv[1]);
-	grafo.bfs(adjl,10,argv[1]);
-	grafo.dfs(adjm,10,argv[1]);
+	grafo.bfs(adjm,123,argv[1]);
+	grafo.bfs(adjl,123,argv[1]);
+
+	grafo.bfs(adjm,489,argv[1]);
+	grafo.bfs(adjl,489,argv[1]);
+
+/*	grafo.dfs(adjm,10,argv[1]);
 	grafo.dfs(adjl,10,argv[1]);
-	grafo.foundConnectedComponents(adjl,argv[1]);
+	grafo.foundConnectedComponents(adjl,argv[1]);*/
 
 	cout << "All done! :D" << endl;
 
