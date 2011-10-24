@@ -1,39 +1,27 @@
 /**
  * Universidade Federal do Rio de Janeiro
  * COS242 - Teoria dos Grafos
- * @descr	Trabalho pratico da disciplina - Parte 1
+ * @descr	Trabalho pratico da disciplina
  * @author	Bruno Tomas / Jonathan Augusto
  */
 
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include "Includes.h"
+#pragma once
 
-/**
- * @brief Definition of as adjacency matrix.
- */
-typedef struct vector< vector<bool> > AdjacencyMatrix;
+#include "Node.h"
+#include "Edge.h"
+#include "AdjacencyMatrix.h"
+#include "AdjacencyList.h"
 
-/**
- * @brief Definition of as adjacency list.
- */
-typedef struct vector< set<unsigned long long> > AdjacencyList;
 
 using namespace std;
 
-/* Declares template functions of all relational operators
+/* Generate overload of all relational functions
  * deriving their behavior from operator== and operator< .
  */
 using namespace rel_ops;
-
-/**
- * @brief Sorts connected components by size (decreasingly)
- */
-bool sortBySize (set<unsigned long long> set1, set<unsigned long long> set2){
-	if  (set1.size() > set2.size()) return true;
-	return false;
-}
 
 /**
  * @brief Abstraction of a graph.
@@ -50,14 +38,13 @@ class Graph{
 		/**
 	 	 * @brief Vector of graph edges.
 	 	 */
-		vector<Edge> g_edges;
+		set<Edge,Edge::compare> g_edges;
 
 		/**
 	 	 * @brief Constructor of an empty graph.
 	 	 */
 		Graph(){
 			g_nodes.reserve(0);
-			g_edges.reserve(0);
 		}
 
 		/**
@@ -66,15 +53,14 @@ class Graph{
 	 	 * @param	nodes_n	Number of nodes.
 	 	 * @param	edges_n	Number of edges.
 	 	 */
-		Graph (unsigned long long nodes_n, unsigned long long edges_n){
-			g_nodes.reserve(nodes_n);
-			g_edges.reserve(edges_n);
+		Graph (unsigned long nodes_n, unsigned long edges_n){
+			g_nodes.reserve(nodes_n+1);
 		}
 
 		/**
 		 * @brief Returns number of edges in graph.
 		 */
-		unsigned long long getEdgesNumber(){
+		unsigned long getEdgesNumber(){
 			return g_edges.size();
 		}
 
@@ -83,7 +69,7 @@ class Graph{
 		 * g_nodes[0] is not used to allow access
 		 * to g_nodes by label number.
 		 */
-		unsigned long long getNodesNumber(){
+		unsigned long getNodesNumber(){
 			return g_nodes.size()-1;
 		}
 
@@ -91,8 +77,8 @@ class Graph{
 		 * @brief Calculates medium degree of a graph.
 		 */
 		float getMediumDegree(){
-			unsigned long long medium_d = 0;
-			for (unsigned long long i = 1; i <= g_nodes.size(); i++) medium_d += g_nodes[i].edges.size();
+			unsigned long medium_d = 0;
+			for (unsigned long i = 1; i <= g_nodes.size(); i++) medium_d += g_nodes[i].edges.size();
 			return (medium_d / getNodesNumber());
 		}
 
@@ -104,11 +90,11 @@ class Graph{
 		float* getEmpiricalDistribution(){
 
 			float *node_d = new float[getNodesNumber()];
-			for (unsigned long long i = 0; i < getNodesNumber(); i++)
+			for (unsigned long i = 0; i < getNodesNumber(); i++)
 				node_d[i] = 0.0;
-			for (unsigned long long i = 1; i <= getNodesNumber(); i++)
+			for (unsigned long i = 1; i <= getNodesNumber(); i++)
 				node_d[g_nodes[i].edges.size()] ++;
-			for (unsigned long long i = 0; i < getNodesNumber(); i++)
+			for (unsigned long i = 0; i < getNodesNumber(); i++)
 				node_d[i] /= getNodesNumber();
 
 			return node_d;
@@ -120,8 +106,7 @@ class Graph{
 		bool operator== (Graph graph){
 			for (unsigned int i = 1; i <= getNodesNumber(); i++)
 				if (g_nodes[i] != graph.g_nodes[i]) return false;
-			for (unsigned int i = 0; i < getEdgesNumber(); i++)
-				if (g_edges[i] != graph.g_edges[i]) return false;
+				if (g_edges != graph.g_edges) return false;
 			return true;
 		}
 
@@ -136,13 +121,12 @@ class Graph{
 
 			cout << ":: CREATE GRAPH ::" << endl;
 
-			unsigned long long nodes_n, edges_n, node1_n, node2_n;
-			time_t start, end;
+			unsigned long nodes_n, edges_n, node1_n, node2_n, weight;
 
 			ifstream file (filename, ifstream::in);
 			if (file.fail()) cout << "Read error :(" << endl;
 
-			time(&start);
+			clock_t start = clock();
 
 			file >> nodes_n;
 
@@ -151,42 +135,40 @@ class Graph{
 			Node node0(0);
 			g_nodes.push_back(node0); // g_nodes[0] empty
 
-			for (unsigned long long i = 1; i <= nodes_n; i++){
+			for (unsigned long i = 1; i <= nodes_n; i++){
 				Node node(i);
 				g_nodes.push_back(node);
 			}
 			cout << "Created " << getNodesNumber() << " nodes in graph" << endl;
 
 			edges_n = 0;
-
 			while (!file.eof()){
-				Edge *edge = new Edge;
+					file >> node1_n;
+					file >> node2_n;
+					file >> weight;
 
-				file >> node1_n;
-				file >> node2_n;
-				if (node1_n == node2_n) {
-					cout << "e(" << node1_n << "," << node2_n << "): Loopback edge?" << endl;
-					continue;
-				}
-				else if ((node1_n == 0)&&(node2_n == 0)){
-					cout << "e(" << node1_n << "," << node2_n << " don't exist!" << endl;
-					continue;
-				}
+				Edge *edge = (Edge *) malloc (sizeof(Edge));
+				edge->weight = weight;
+				edge->isDirected = false;
 
 				edge->addNodes(&g_nodes[node1_n], &g_nodes[node2_n]);
 
 				//g_nodes[node1_n].addEdge(edge);
 				//g_nodes[node2_n].addEdge(edge);
 
-				g_edges.push_back(*edge);
+				g_edges.insert(*edge);
 				edges_n++;
 			}
 
 			cout << "Created " << getEdgesNumber() << " edges in graph" << endl;
 
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-			cout << "RAM: " << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << " bytes" << endl;
+			clock_t end = clock();
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "buildFG:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << endl;
+			operationsFile.flush();
+			operationsFile.close();
 
 			file.close();
 		}
@@ -200,9 +182,6 @@ class Graph{
 		 * 					(it will be concatenated with "info_")
 		 */
 		void buildInformationFile (string filename){
-			// "Entrada": o proprio grafo que chama a funcao para si mesmo
-			// "Saida": arquivo contendo as informacoes constantes do enunciado do trabalho (nada e' retornado pela funcao)
-
 
 			ofstream file ("info_"+filename, ifstream::out);
 			file << "# n = " << getEdgesNumber() << endl;
@@ -211,7 +190,7 @@ class Graph{
 
 			float *nodeDegrees = getEmpiricalDistribution();
 
-			for (unsigned long long i = 0; i < getNodesNumber()-1; i++)
+			for (unsigned long i = 0; i < getNodesNumber()-1; i++)
 				if (nodeDegrees[i]!= 0) file << i << " " << nodeDegrees[i] << endl;
 
 			file.flush();
@@ -221,296 +200,123 @@ class Graph{
 		/**
 		 * @brief Builds and returns adjacency matrix of a graph.
 		 */
-		AdjacencyMatrix buildAdjMatrix (){
-				// "Entrada": o proprio grafo que chama a funcao para si mesmo
-				// Saida:  matriz de adjacencia do grafo
+		AdjacencyMatrix convertToMatrix (){
 
 			cout << ":: CREATE ADJACENCY MATRIX ::" << endl;
 
-			time_t start, end;
+			float start = clock()/CLOCKS_PER_SEC;
 
-			time(&start);
+			AdjacencyMatrix adjm( getNodesNumber() );
 
-			AdjacencyMatrix adjm( getNodesNumber()+1, vector<bool>( getNodesNumber()+1, false ) );
-
-			for (unsigned long long i = 0; i < getEdgesNumber(); i++){
-							adjm[g_edges[i].from->label][g_edges[i].to->label] = true;
-							//cout << "e(" << g_edges[i].from->label << "," << g_edges[i].to->label << ") ";
-							adjm[g_edges[i].to->label][g_edges[i].from->label] = true;
-							//cout << "e(" << g_edges[i].to->label << "," << g_edges[i].from->label << ") ";
+			for (set<Edge>::iterator it = g_edges.begin(); it != g_edges.end(); it++){
+				unsigned long n1 =	it->from->label;
+				unsigned long n2 =	it->to->label;
+				if (n1<n2) adjm[n1-1][n2-n1-1] = it->weight;
+				else adjm[n2-1][n1-n2-1] = it->weight;
+				//cout << "e(" << n1 << "," << n2 << ") ";
 			}
 
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-			cout << "RAM: " << getNodesNumber()*getNodesNumber()/8 << " bytes" << endl;
+			float end = clock()/CLOCKS_PER_SEC;
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "buildGM:" << end - start << ":" << getNodesNumber()*getNodesNumber()/8 << endl;
+			operationsFile.flush();
+			operationsFile.close();
 
 			return adjm;
 		}
 
 		/**
-		 * @brief Test adjacency between two nodes using adjacency matrix.
-		 * @param	adjm	Adjacency matrix.
-		 * @param	node1	Label of a node.
-		 * @param	node2 	Label of the other node.
-		 */
-		bool testAdjacency (AdjacencyMatrix adjm, unsigned long long node1, unsigned long long node2){
-			if (node1 == node2){
-				cout << "Nodes are same" << endl;
-				return false;
-			}
-			return adjm[node1][node2];
-		}
-
-		/**
 		 * @brief Builds and returns adjacency list of a graph.
 		 */
-		AdjacencyList buildAdjList(){
+		AdjacencyList convertToList(){
 
 			cout << ":: CREATE ADJACENCY LIST ::" << endl;
 
-			time_t start, end;
+			float start = clock()/CLOCKS_PER_SEC;
 
-			time(&start);
+			AdjacencyList adjl (getNodesNumber()+1);
 
-			AdjacencyList adjl (getNodesNumber()+1, set <unsigned long long>());
-
-			for (unsigned long long i = 1; i <= getNodesNumber(); i++){
-				for (unsigned long long j = 0; j < g_nodes[i].edges.size(); j++){
-					if (g_nodes[i].edges[j]->from == &g_nodes[i]){
-						adjl[i].insert(g_nodes[i].edges[j]->to->label);
-					}
-					else{
-						adjl[i].insert(g_nodes[i].edges[j]->from->label);
-					}
+			for (unsigned long i = 1; i <= getNodesNumber(); i++){
+				for (set<Edge *>::iterator it=g_nodes[i].edges.begin(); it!=g_nodes[i].edges.end(); it++){
+					if ((*it)->from == &g_nodes[i])
+						adjl[i].insert(make_pair ((*it)->to->label,(*it)->weight));
+					else
+						adjl[i].insert(make_pair ((*it)->from->label,(*it)->weight));
 				}
 				//adjl[i].sort();
 			}
 
-			time(&end);
+			float end = clock()/CLOCKS_PER_SEC;
 
-			unsigned long long total = 0;
-			for (unsigned long long i = 0; i < adjl.size(); i++){
-				total += adjl[i].size()*sizeof(unsigned long long);
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else {
+				unsigned long total = 0;
+				for (unsigned long i = 0; i < adjl.size(); i++)
+					total += adjl[i].size()*sizeof(unsigned long);
+				operationsFile << "buildGL:" << end - start << ":" << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << endl;
 			}
+			operationsFile.flush();
+			operationsFile.close();
 
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-			cout << "RAM: " << total << " bytes" << endl;
 
 			return adjl;
 		}
 
-		/**
-		 * @brief Test adjacency between two nodes using adjacency list.
-		 * @param	adjl	Adjacency list.
-		 * @param	node1	Label of a node.
-		 * @param	node2 	Label of the other node.
-		 */
-		bool testAdjacency (AdjacencyList adjl, unsigned long long node1, unsigned long long node2){
-			if (node1 == node2){
-				cout << "Nodes are same" << endl;
-				return false;
+		set<Node *> bfs(unsigned long startingNode,  string filename){
+
+			cout << ":: BFS USING GRAPH ::" << endl;
+			ofstream file ("bfsg_"+filename, ifstream::out);
+
+			queue<Node *> searchStack;
+			Node* dadNode[g_nodes.size()+1];
+			vector<long> nodeLevels (g_nodes.size()+1, -1);
+			std::set<Node *> connected;
+
+			float start = clock()/CLOCKS_PER_SEC;
+
+			for (unsigned long i = 0; i < this->g_nodes.size(); i++){
+				nodeLevels[i] = 0;
 			}
-
-			set<unsigned long long>::iterator it;
-			it = adjl[node1].find(node2);
-			if (it == adjl[node1].end()) return false;
-			return true;
-		}
-
-		/**
-		 * @brief Breadth-first search using adjacency matrix.
-		 * Returns the connected component found.
-		 * @param	adjl			Reference to adjacency matrix.
-		 * @param	startingNode	Label of starting node.
-		 * @param	filename		Filename where search tree will be written
-		 * 							(it will be concatenated with "bfsm_")
-		 */
-		set<unsigned long long> bfs(AdjacencyMatrix &adjm, unsigned long long startingNode, string filename){
-
-			cout << ":: BFS USING ADJACENCY MATRIX ::" << endl;
-			ofstream file ("bfsm_"+filename, ifstream::out);
-			queue<unsigned long long> searchQueue;
-			unsigned long long set[getNodesNumber()+1][2]; // [0] to dad node; [1] to node level
-			std::set<unsigned long long> connected;
-			unsigned long long node;
-
-			time_t start, end;
-
-			time(&start);
-
-			for (unsigned int i = 1; i <= getNodesNumber(); i++)
-				adjm[i][0] = false; // node flag
 
 			cout << "Starting node: " << startingNode << endl;
 
-			adjm[startingNode][0] = true;
-			set[startingNode][1] = 0;
-			searchQueue.push(startingNode);
+			nodeLevels[startingNode] = 0;
+			searchStack.push(&g_nodes[startingNode]);
+			g_nodes[startingNode].flag();
 
-			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
-
-			while (!searchQueue.empty()){
-
-				node = searchQueue.front();
-				searchQueue.pop();
-				connected.insert(node);
-
-				for (unsigned int i = 1; i <= getNodesNumber() ; i++){
-					if ((adjm[node][i] == true)&&(adjm[i][0] == false)){
-						adjm[i][0] = true;
-						searchQueue.push(i);
-						set[i][0] = node;
-						set[i][1] = set[node][1] + 1;
-					}
-				}
-
-			}
-
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-
-			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
-				if ((adjm[i][0] == 1)&&(set[i][1] > 0))
-					file << "n: " << i <<"\tdad: " << set[i][0] <<  "\tlevel: " << set[i][1] << endl;
-
-			file.flush();
-			file.close();
-
-			return connected;
-		}
-
-		/**
-		 * @brief Breadth-first search using adjacency list.
-		 * Returns the connected component found.
-		 * @param	adjl			Reference to adjacency list.
-		 * @param	startingNode	Label of starting node.
-		 * @param	filename		Filename where search tree will be written
-		 * 							(it will be concatenated with "bfsl_")
-		 */
-		set<unsigned long long> bfs(AdjacencyList &adjl, unsigned long long startingNode, string filename){
-
-			cout << ":: BFS USING ADJACENCY LIST ::" << endl;
-			ofstream file ("bfsl_"+filename, ifstream::out);
-			ofstream file2 ("majorlevel", ifstream::app);
-			queue<unsigned long long> searchQueue;
-			unsigned long long set[getNodesNumber()+1][3]; // [0] to dad node; [1] to node level; [2] to flag
-			std::set<unsigned long long> connected;
-			unsigned long long node, node2;
-
-
-			time_t start, end;
-
-			time(&start);
-
-			for (unsigned int i = 1; i <= getNodesNumber(); i++)
-				set[i][2] = 0; // node flag
-
-			cout << "Starting node: " << startingNode << endl;
-
-			set[startingNode][2] = 1;
-			set[startingNode][1] = 0;
-			searchQueue.push(startingNode);
-
-			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
-
-			while (!searchQueue.empty()){
-
-				node = searchQueue.front();
-				searchQueue.pop();
-				connected.insert(node);
-
-				for (std::set<unsigned long long>::iterator it = adjl[node].begin(); it != adjl[node].end() ; it++){
-					node2 = *it;
-
-					if (set[node2][2] == 0){
-						set[node2][2] = 1;
-						searchQueue.push(node2);
-						set[node2][0] = node;
-						set[node2][1] = set[node][1] + 1;
-					}
-				}
-			}
-
-
-
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-
-			unsigned int majorLevel = 0;
-			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
-				if ((set[i][2] == 1)&&(set[i][1] > 0)){
-					file << "n: " << i <<"\tdad: " << set[i][0] <<  "\tlevel: " << set[i][1] << endl;
-					if (set[i][1] > majorLevel) majorLevel = set[i][1];
-				}
-
-			file2 << "initial: " << startingNode << " | major level: " << majorLevel << endl;
-
-			file.flush();
-			file.close();
-			file2.flush();
-			file2.close();
-			return connected;
-		}
-
-
-		/**
-		 * @brief Depth-first search using adjacency matrix.
-		 * Returns the connected component found.
-		 * @param	adjm			Reference to adjacency matrix.
-		 * @param	startingNode	Label of starting node.
-		 * @param	filename		Filename where search tree will be written
-		 * 							(it will be concatenated with "dfsm_")
-		 */
-		set<unsigned long long> dfs(AdjacencyMatrix &adjm, unsigned long long startingNode, string filename){
-
-
-			cout << ":: DFS USING ADJACENCY MATRIX ::" << endl;
-			ofstream file ("dfsm_"+filename, ifstream::out);
-
-			stack<unsigned long long> searchStack;
-			unsigned long long set[getNodesNumber()+1][2]; // [0] to dad node; [1] to node level
-			std::set<unsigned long long> connected;
-			unsigned long long node;
-
-			time_t start, end;
-
-			time(&start);
-
-			for (unsigned int i = 1; i <= getNodesNumber(); i++)
-				adjm[i][0] = false; // node flag
-
-			cout << "Starting node: " << startingNode << endl;
-
-			set[startingNode][1] = 0;
-			searchStack.push(startingNode);
-
-			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
+			file << "n: " << startingNode << "\troot\tlevel: " << nodeLevels[startingNode] << endl;
 
 			while (!searchStack.empty()){
-
-				node = searchStack.top();
+				Node *node = searchStack.front();
 				searchStack.pop();
 				connected.insert(node);
-
-				if(adjm[node][0] == false){
-					adjm[node][0] = true; // flag
-					for (unsigned int i = 1; i <= getNodesNumber() ; i++){
-						if ((adjm[node][i] == true)&&(adjm[i][0] == false)){
-							searchStack.push(i);
-							set[i][0] = node;
-							set[i][1] = set[node][1] + 1;
-						}
+				cout << "T " << *node << " | ";
+				list <Node *> connectedNodes = node->getConnectedNodes();
+				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
+					Node *node2 = *it;
+					if (node2->isflagged() == false){
+						node2->flag();
+						searchStack.push(node2);
+						dadNode[node2->label] = node;
+						nodeLevels[node2->label] = nodeLevels[node->label] + 1;
 					}
 				}
-
 			}
 
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
+			float end = clock()/CLOCKS_PER_SEC;
 
-			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
-				if ((adjm[i][0] == 1)&&(set[i][1] > 0))
-					file << "n: " << i <<"\tdad: " << set[i][0] <<  "\tlevel: " << set[i][1] << endl;
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "dfsL:" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			for (unsigned int i = 1; i < g_nodes.size(); i++)
+				if (nodeLevels[i] > 0)
+					file << "n: " << i <<"\tdad: " << dadNode[i]->label <<  "\tlevel: " << nodeLevels[i] << endl;
 
 			file.flush();
 			file.close();
@@ -518,121 +324,19 @@ class Graph{
 
 			return connected;
 
+
 		}
 
-		/**
-		 * @brief Depth-first search using adjacency list.
-		 * Returns the connected component found.
-		 * @param	adjl			Reference to adjacency lsit.
-		 * @param	startingNode	Label of starting node.
-		 * @param	filename		Filename where search tree will be written
-		 * 							(it will be concatenated with "dfsl_")
-		 */
-		set<unsigned long long> dfs(AdjacencyList &adjl, unsigned long long startingNode, string filename){
-
-			cout << ":: DFS USING ADJACENCY LIST ::" << endl;
-			ofstream file ("dfsl_"+filename, ifstream::out);
-			stack<unsigned long long> searchStack;
-			unsigned long long set[getNodesNumber()+1][3]; // [0] to dad node; [1] to node level; [2] to flag
-			std::set <unsigned long long> connected;
-			unsigned long long node, node2;
+		vector <Edge *> path(unsigned long node){
 
 
-			time_t start, end;
-
-			time(&start);
-
-			for (unsigned int i = 1; i <= getNodesNumber(); i++)
-				set[i][2] = 0; // node flag
-
-			cout << "Starting node: " << startingNode << endl;
-
-			set[startingNode][1] = 0;
-			searchStack.push(startingNode);
-
-			file << "n: " << startingNode << "\troot\tlevel: " << set[startingNode][1] << endl;
-
-			while (!searchStack.empty()){
-
-				node = searchStack.top();
-				searchStack.pop();
-				connected.insert(node);
-
-				if (set[node][2] == 0){
-
-					set[node][2] = 1;
-
-					for (std::set<unsigned long long>::iterator it = adjl[node].begin(); it != adjl[node].end() ; it++){
-						node2 = *it;
-
-							searchStack.push(node2);
-							if(set[node2][2] == 0){	set[node2][0] = node;
-							set[node2][1] = set[node][1] + 1;
-						}
-					}
-				}
-
-			}
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-
-			for (unsigned int i = 1; i <= getNodesNumber() ; i++)
-				if ((set[i][2] == 1)&&(set[i][1] > 0))
-					file << "n: " << i <<"\tdad: " << set[i][0] <<  "\tlevel: " << set[i][1] << endl;
-
-			file.flush();
-			file.close();
-
-
-			return connected;
 		}
 
-		/**
-		 * @brief Found all connected component in graph using adjacency list.
-		 * @param	adjl		Adjacency list.
-		 * @param	filename	Filename where search tree will be written
-		 * 							(it will be concatenated with "dfsm_")
-		 */
-		void foundConnectedComponents (AdjacencyList adjl, string filename){
+		vector <Edge *> path (unsigned long startingNode, unsigned long endingNode){
 
-			cout << ":: FOUND CONNECTED COMPONENTS ::" << endl;
-			ofstream file ("cc_"+filename, ifstream::out);
-			string fn;
-			set<unsigned long long> component{};
-			list <set<unsigned long long> > sortedComponents;
 
-			time_t start, end;
-
-			time(&start);
-
-			for(unsigned long long i = 1; i <= getNodesNumber(); i++){
-				for (set<unsigned long long>::iterator it = component.find(i); i == *it; i++, *it++);
-				if (i > getNodesNumber()) break;
-				component = bfs(adjl,i,filename);
-				sortedComponents.push_back(component);
-				sortedComponents.sort(sortBySize);
-				sortedComponents.unique();
-				if (!(sortedComponents.size() % 200)) cout << sortedComponents.size() <<" components found\n";
-			}
-			cout << sortedComponents.size() <<" components found\n";
-
-			time(&end);
-			cout << "Time: " << difftime (end, start) << " seconds" << endl;
-
-			cout << "Writing file..." << endl;
-
-			file << sortedComponents.size() << endl;
-
-			for (list <set<unsigned long long> >::iterator it = sortedComponents.begin(); it != sortedComponents.end(); it++){
-				file << "[size=" << it->size() << "]";
-				for (set<unsigned long long>::iterator it2 = it->begin(); it2 != it->end(); it2++)
-					file << " " << *it2;
-				file << endl;
-			}
-
-			file.flush();
-			file.close();
 		}
+
 
 };
 

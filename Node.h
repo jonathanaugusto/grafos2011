@@ -1,7 +1,7 @@
 /**
  * Universidade Federal do Rio de Janeiro
  * COS242 - Teoria dos Grafos
- * @descr	Trabalho pratico da disciplina - Parte 1
+ * @descr	Trabalho pratico da disciplina
  * @author	Bruno Tomas / Jonathan Augusto
  */
 
@@ -11,8 +11,6 @@
 #pragma once		// Solve cross-reference (Node includes Edge, that includes Node...)
 class Edge;			// Defined in Edge.h
 #include "Edge.h"
-#include "Includes.h"
-
 using namespace std;
 
 /**
@@ -31,13 +29,13 @@ class Node{
 		 * @brief Vector that stores pointers to
 		 * edges connected to this node.
 		 */
-		vector<Edge*> edges;
+		set<Edge*> edges;
 
 		/**
-		 * @brief Flag for node mark in search
+		 * @brief bit_flag for node mark in search
 		 * functions (BFS, DFS)
 		 */
-		bitset<1> flag;
+		bitset<1> bit_flag;
 
 		/**
 		 * @brief Constructor for class Node.
@@ -45,6 +43,7 @@ class Node{
 		 */
 		Node(unsigned long int nodeLabel){
 			label = nodeLabel;
+			bit_flag.reset();
 		}
 
 		/**
@@ -53,9 +52,10 @@ class Node{
 		 * @param connectedEdges	Vector of pointers to
 		 * 							edges connected to this.
 		 */
-		Node(unsigned long int nodeLabel, vector<Edge*> connectedEdges){
+		Node(unsigned long int nodeLabel, set<Edge*> connectedEdges){
 			label = nodeLabel;
 			edges = connectedEdges;
+			bit_flag.reset();
 		}
 
 		/**
@@ -95,8 +95,29 @@ class Node{
 		void printEdges();
 		// defined in Edge.h
 
+		void flag(){
+			bit_flag.set();
+		}
+
+		void unflag(){
+			bit_flag.reset();
+		}
+
+		bool isflagged(){
+			return bit_flag.test(0);
+		}
+
+		unsigned long getDegree(){
+			return edges.size();
+		}
+
+		list<Node *> getConnectedNodes();
+
 };
 
+bool sortByLabel (Node *node1, Node *node2){
+	return node1->label < node2->label;
+}
 
 
 #endif

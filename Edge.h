@@ -1,7 +1,7 @@
 /**
  * Universidade Federal do Rio de Janeiro
  * COS242 - Teoria dos Grafos
- * @descr	Trabalho pratico da disciplina - Parte 1
+ * @descr	Trabalho pratico da disciplina
  * @author	Bruno Tomas / Jonathan Augusto
  */
 
@@ -9,9 +9,8 @@
 #define EDGE_H
 
 #pragma once		// Solve cross-reference (Node includes Edge, that includes Node...)
-class Node;			// Defined in Edge.h
+
 #include "Node.h"
-#include "Includes.h"
 
 using namespace std;
 
@@ -25,7 +24,7 @@ class Edge{
 		/**
 		 * @brief Value of edge weight.
 		 */
-		unsigned long int weight;
+		float weight;
 
 		/**
 		 * @brief Pointers to the nodes connected.
@@ -76,23 +75,24 @@ class Edge{
 		 * @brief Overload of relational operators.
 		 */
 		bool operator== (Edge edge) const{
-			return ((*from == *(edge.from)) && (*to == *(edge.to)) && (isDirected == false) && (edge.isDirected == false));
+			return ((from == edge.from) && (to == edge.to) && (isDirected == false) && (edge.isDirected == false));
 		}
 
 		/**
 		 * @brief Overload of relational operators.
 		 */
 		bool operator< (Edge edge) const{
-			return ((*from == *(edge.from)) && (*to == *(edge.to)) && ((weight < edge.weight)));
+			return weight < edge.weight;
+			// return ((*from < *(edge.from)) + (*to < *(edge.to)));
 		}
 
 		/**
 		 * @brief Overload of output insertion operator.
 		 */
 		friend ostream& operator<< (ostream& out, Edge edge){
-			out << "e(" << edge.from->label << "," << edge.to->label;
-			if (!edge.isDirected) out << ",-)";
-			else out << ",->)";
+			out << "e(" << edge.from->label;
+			if (!edge.isDirected) out << "-" << edge.to->label << ")";
+			else out << "->" << edge.to->label << ")";
 			return out;
 		}
 
@@ -108,7 +108,11 @@ class Edge{
 			toNode->addEdge (this);
 		}
 
-
+		struct compare {
+			bool operator() (const Edge &edge1, const Edge &edge2){
+				return edge1 < edge2;
+			}
+		};
 };
 
 /**
@@ -117,10 +121,10 @@ class Edge{
  */
 void Node::addEdge(Edge *edge){
 
-	for (unsigned long int i = 0; i < edges.size(); i++)
-		if (*edges[i] == *edge) return;
-
-	edges.push_back(edge);
+	set<Edge *>::iterator it;
+	it = edges.find (edge);
+	if (it == edges.end())
+		edges.insert(edge);
 
 };
 
@@ -129,11 +133,28 @@ void Node::addEdge(Edge *edge){
  */
 void Node::printEdges (){
 		cout << "Edges connected to node " <<  label << ":" << endl;
-		for (unsigned long int i = 0; i < edges.size(); i++){
-			cout << *edges[i] << endl;
-		}
+		for (set<Edge *>::iterator it=edges.begin(); it!=edges.end(); it++)
+			cout << *it << endl;
 		cout << endl;
 }
+
+
+list<Node *> Node::getConnectedNodes(){
+	list<Node *> connected;
+	for (set<Edge *>::iterator it=edges.begin(); it!=edges.end(); it++){
+		if((*(*(*it)).from) == *this)
+			connected.push_back(&*(*(*it)).to);
+		else
+			connected.push_back(&*(*(*it)).from);
+	}
+	connected.sort(sortByLabel);
+
+	return connected;
+}
+
+
+
+
 
 
 #endif

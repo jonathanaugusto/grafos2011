@@ -1,7 +1,7 @@
 /**
  * Universidade Federal do Rio de Janeiro
  * COS242 - Teoria dos Grafos
- * @descr	Trabalho pratico da disciplina - Parte 1
+ * @descr	Trabalho pratico da disciplina
  * @author	Bruno Tomas / Jonathan Augusto
  */
 
@@ -16,24 +16,12 @@ int main(int argc, char *argv[])
 		system ("PAUSE");
 		return 0;
 	}
-	Graph grafo;
+	Graph graph;
 	AdjacencyMatrix adjm;
 	AdjacencyList adjl;
 
-	grafo.buildGraph(argv[1]);
-	grafo.buildInformationFile(argv[1]);
-
-	adjm = grafo.buildAdjMatrix ();
-	adjl = grafo.buildAdjList ();
-
-	grafo.bfs(adjm,1,argv[1]);
-
-	for(unsigned int i = 1; i <= grafo.getNodesNumber(); i++)
-		grafo.bfs(adjl,i,argv[1]);
-
-	grafo.dfs(adjm,10,argv[1]);
-	grafo.dfs(adjl,10,argv[1]);
-	grafo.foundConnectedComponents(adjl,argv[1]);
+	graph.buildGraph(argv[1]);
+	graph.bfs(1,argv[1]);
 
 	cout << "All done! :D" << endl;
 
