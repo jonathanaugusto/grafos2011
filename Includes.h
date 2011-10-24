@@ -37,8 +37,7 @@
 #include <algorithm>
 #include <utility>
 #include <ctime>
-#include <windows.h>
-#include <psapi.h>
+#include <limits>
 
 #include "Edge.h"
 #include "Graph.h"

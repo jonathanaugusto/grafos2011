@@ -32,10 +32,16 @@ class Node{
 		set<Edge*> edges;
 
 		/**
-		 * @brief bit_flag for node mark in search
+		 * @brief Flag for node mark in search
 		 * functions (BFS, DFS)
 		 */
 		bitset<1> bit_flag;
+
+		/**
+		 * @brief Minimum distance from another node
+		 * (used in path functions)
+		 */
+		float distance;
 
 		/**
 		 * @brief Constructor for class Node.
@@ -80,6 +86,15 @@ class Node{
 		bool operator< (Node node) const{
 			return label < node.label;
 		}
+		struct sortByDistance{
+			bool operator() (Node *node1, Node *node2){
+				if (node1->distance < node2->distance)
+					return true;
+				else if (node1->label < node2-> label)
+					return true;
+				return false;
+			}
+		};
 
 		/**
 		 * @brief Overload of output insertion operator.
@@ -118,6 +133,5 @@ class Node{
 bool sortByLabel (Node *node1, Node *node2){
 	return node1->label < node2->label;
 }
-
 
 #endif

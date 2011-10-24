@@ -21,6 +21,8 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 
 public:
 
+	bitset<2> weighted; // [0] to weighted graph; [1] to a negative weight
+
 	AdjacencyMatrix(){
 		new (this) vector< vector<float> >( 0, vector<float>(0, 0.0));
 	}
@@ -49,7 +51,12 @@ public:
 	 */
 	float getAdjacency (unsigned long node1, unsigned long node2){
 		if (node1 == node2) return 0;
-		return this->at(node1-1).at(node2-node1-1);
+		if (node1 < node2) return at(node1-1).at(node2-node1-1);
+		return at(node2-1).at(node1-node2-1);
+	}
+
+	unsigned long getNodesNumber(){
+		return size()+1;
 	}
 
 
@@ -60,11 +67,11 @@ public:
 	 * with an edge)
 	 * @param filename	String containing filename.
 	 */
-	AdjacencyMatrix buildAdjacencyMatrix(string filename){
+	void build(string filename){
 
 		cout << ":: CREATE ADJACENCY MATRIX ::" << endl;
 
-		unsigned long nodes_n, node1, node2, weight;
+		unsigned long nodes_n, node1, node2, weight, edges_n;
 
 		ifstream file (filename, ifstream::in);
 		if (file.fail()) cout << "Read error :(" << endl;
@@ -75,30 +82,35 @@ public:
 
 		cout << "File: " << filename << endl;
 
-		AdjacencyMatrix adjm( nodes_n );
+		new (this) AdjacencyMatrix (nodes_n);
 
+		cout << "Created " << nodes_n << " nodes in adjacency matrix" << endl;
+
+		edges_n = 0;
 		while (!file.eof()){
 			file >> node1;
 			file >> node2;
+			if (file.eof()) break;
 			file >> weight;
-			adjm.setAdjacency(node1,node2,weight);
+			if (weight != 1) weighted[0] = true;
+			if (weight < 0) weighted[1] = true;
+			setAdjacency(node1,node2,weight);
+			edges_n++;
 		}
+
+		cout << "Created " << edges_n << " edges in adjacency matrix" << endl;
 
 		clock_t end = clock();
 
 		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-		else operationsFile << "buildFM:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << adjm.size()*sizeof(unsigned long) << endl;
+		else operationsFile << "buildFM:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
 		operationsFile.flush();
 		operationsFile.close();
 
-		cout << endl;
-
-
-
 		file.close();
 
-		return adjm;
+		//return adjm;
 	}
 
 	/**
@@ -120,7 +132,7 @@ public:
 
 		float start = clock()/CLOCKS_PER_SEC;
 
-		for (unsigned int i = 1; i <= size(); i++){
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
 			set[i-1][2] = 0; // node flag
 			set[i-1][1] = -1;
 		}
@@ -138,7 +150,7 @@ public:
 			searchQueue.pop();
 			connected.insert(node);
 
-			for (unsigned int i = 1; i <= size(); i++){
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
 				if (getAdjacency(node,i)&&(set[i-1][2] == 0)){
 					set[i-1][2] = 1;
 					searchQueue.push(i);
@@ -156,7 +168,7 @@ public:
 		operationsFile.flush();
 		operationsFile.close();
 
-		for (unsigned int i = 1; i <= size(); i++)
+		for (unsigned int i = 1; i <= getNodesNumber(); i++)
 			if ((set[i-1][2] == 1)&&(set[i-1][1] > 0))
 				file << "n: " << i <<"\tdad: " << set[i-1][0] <<  "\tlevel: " << set[i-1][1] << endl;
 
@@ -208,7 +220,7 @@ public:
 
 			if(set[node-1][2] == 0){
 				set[node-1][2] = 1; // flag
-				for (unsigned int i = 1; i <= size() ; i++){
+				for (unsigned int i = 1; i <= getNodesNumber() ; i++){
 					if (getAdjacency(node,i)&&(set[i-1][2] == 0)){
 						searchStack.push(i);
 						set[i-1][0] = node;
@@ -227,7 +239,7 @@ public:
 		operationsFile.flush();
 		operationsFile.close();
 
-		for (unsigned int i = 1; i <= size(); i++)
+		for (unsigned int i = 1; i <= getNodesNumber(); i++)
 			if ((set[i-1][2] == 1)&&(set[i-1][1] > 0))
 				file << "n: " << i <<"\tdad: " << set[i-1][0] <<  "\tlevel: " << set[i-1][1] << endl;
 
@@ -236,6 +248,140 @@ public:
 
 
 		return connected;
+
+	}
+
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, unsigned long endingNode, string filename){
+
+		cout << ":: MINIMUM PATH USING ADJACENCY MATRIX ::" << endl;
+		ofstream file ("pathm_"+filename, ifstream::out);
+
+		queue<unsigned long> searchStack;
+		vector< vector <unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+		vector<bool> flag (getNodesNumber()+1, false);
+
+		float start = clock()/CLOCKS_PER_SEC;
+
+		cout << "Starting node: " << startingNode << "; Ending node: " << endingNode << endl;
+		searchStack.push(startingNode);
+		flag[startingNode] = true;
+		path[startingNode].push_back(startingNode);
+
+		file << "n: " << startingNode << "\troot" << endl;
+
+		while (!searchStack.empty()){
+			unsigned long node = searchStack.front();
+			searchStack.pop();
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				if ((flag[i] == false) && (getAdjacency (i,node) != 0)){
+					flag[i] = true;
+					searchStack.push(i);
+					path[i] = path[node];
+					path[i].push_back(i);
+				}
+			}
+		}
+
+		float end = clock()/CLOCKS_PER_SEC;
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "pathnM:" << end - start << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			if (path[i].size() > 1){
+				file << "n: " << i <<"\tpath: " << path[i][0];
+
+				for (unsigned int j = 0; j < path[i].size(); ++j) {
+					file << "-" << path[i][j];
+				}
+				file << endl;
+			}
+		}
+
+		file.flush();
+		file.close();
+
+		return path[endingNode];
+
+	}
+
+	struct sortByDistance{
+				bool operator() (pair <unsigned long,float*> p1, pair <unsigned long,float*> p2){
+					if (*(p1.second) < *(p2.second))
+						return true;
+					else if (p1.first < p2.first)
+						return true;
+					return false;
+				}
+	};
+
+	vector<unsigned long> dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
+
+		cout << ":: DIJKSTRA USING ADJACENCY MATRIX ::" << endl;
+		ofstream file ("dijkm_"+filename, ifstream::out);
+
+		vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+
+		set <pair <unsigned long,float*>, sortByDistance > nodes; // V-S
+		float distance[getNodesNumber()+1];
+		float start = clock()/CLOCKS_PER_SEC;
+
+		for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
+			distance[i] = numeric_limits<float>::infinity();
+			if (i != startingNode) nodes.insert (make_pair(i,&distance[i]));
+		}
+		distance[startingNode] = 0;
+		nodes.insert (make_pair(startingNode,&distance[startingNode]));
+		file << "n: " << startingNode << "\troot" << endl;
+
+		while (nodes.size() > 0){
+			nodes.size() % 10 == 0 ? cout << nodes.size() << " nodes remaining" << endl : cout << "";
+			pair <unsigned long,float*> node = *nodes.begin();
+			nodes.erase(nodes.begin());
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				if (getAdjacency (node.first, i)!= 0){
+					if (distance[i] > distance[node.first] + getAdjacency (node.first, i)){
+						distance[i] = distance[node.first] + getAdjacency (node.first, i);
+						path[i] = path[node.first];
+						path[i].push_back(node.first);
+					}
+				}
+			}
+		}
+
+		float end = clock()/CLOCKS_PER_SEC;
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "dijkM:" << end - start << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			if (path[i].size() > 0){
+				file << "n: " << i <<"\tpath: ";
+				for (unsigned int j = 0; j < path[i].size(); ++j, file << "-") {
+					file << path[i][j];
+				}
+				file << i << endl;
+			}
+		}
+		file.flush();
+		file.close();
+
+		return path[endingNode];
+	}
+
+	vector <unsigned long> path(unsigned long startingNode, unsigned long endingNode, string filename){
+		if (weighted[0] = false) // non-weighted graph: BFS-like algorithm
+			return nonWeightedPath(startingNode, endingNode, filename);
+		else if (weighted[1] = false)
+			return dijkstra (startingNode, endingNode, filename); // weighted graph: Dijkstra algorithm
+		else cout << "Weighted graph, but negative weights"; // we can't do anything
+		return {};
 
 	}
 

@@ -20,9 +20,11 @@ int main(int argc, char *argv[])
 	AdjacencyMatrix adjm;
 	AdjacencyList adjl;
 
-	graph.buildGraph(argv[1]);
-	graph.bfs(1,argv[1]);
-	graph.nonWeightedPath(1,41,argv[1]);
+	graph.build(argv[1]);
+	adjm.build(argv[1]);
+
+	graph.dijkstra(1,7,argv[1]);
+	adjm.dijkstra(1,7,argv[1]);
 
 	cout << "All done! :D" << endl;
 
