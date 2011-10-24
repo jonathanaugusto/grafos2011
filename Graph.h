@@ -293,7 +293,6 @@ class Graph{
 				Node *node = searchStack.front();
 				searchStack.pop();
 				connected.insert(node);
-				cout << "T " << *node << " | ";
 				list <Node *> connectedNodes = node->getConnectedNodes();
 				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
 					Node *node2 = *it;
@@ -310,7 +309,7 @@ class Graph{
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "dfsL:" << end - start << endl;
+			else operationsFile << "bfsG:" << end - start << endl;
 			operationsFile.flush();
 			operationsFile.close();
 
@@ -321,17 +320,84 @@ class Graph{
 			file.flush();
 			file.close();
 
+			for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
+				g_nodes[i].unflag();
+			}
+
 			return connected;
 
 		}
 
-		vector <Edge *> path(unsigned long node){
+		vector<Node *> nonWeightedPath(unsigned long startingNode, unsigned long endingNode, string filename){
 
+			cout << ":: MINIMUM PATH USING GRAPH ::" << endl;
+			ofstream file ("pathg_"+filename, ifstream::out);
+
+			queue<Node *> searchStack;
+			vector< vector <Node*> > path (g_nodes.size()+1, {});
+
+			float start = clock()/CLOCKS_PER_SEC;
+
+			cout << "Starting node: " << startingNode << "; Ending node: " << endingNode << endl;
+			searchStack.push(&g_nodes[startingNode]);
+			g_nodes[startingNode].flag();
+			path[startingNode].push_back(&g_nodes[startingNode]);
+
+			file << "n: " << startingNode << "\troot" << endl;
+
+			while (!searchStack.empty()){
+				Node *node = searchStack.front();
+				searchStack.pop();
+				list <Node *> connectedNodes = node->getConnectedNodes();
+				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
+					Node *node2 = *it;
+					if (node2->isflagged() == false){
+						node2->flag();
+						searchStack.push(node2);
+						path[node2->label] = path[node->label];
+						path[node2->label].push_back(node2);
+					}
+				}
+			}
+
+			float end = clock()/CLOCKS_PER_SEC;
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "pathG:" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			for (unsigned int i = 1; i <= g_nodes.size(); i++){
+				if (path[i].size() > 1){
+					file << "n: " << i <<"\tpath: ";
+					for (unsigned int j = 0; j < path[i].size(); ++j, file << "-") {
+						file << path[i][j]->label;
+					}
+					file << endl;
+				}
+			}
+
+			file.flush();
+			file.close();
+
+			for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
+				g_nodes[i].unflag();
+			}
+
+			return path[endingNode];
 
 		}
 
-		vector <Edge *> path (unsigned long startingNode, unsigned long endingNode){
+		vector<Node *> dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
 
+		}
+
+		vector <Node *> path(unsigned long startingNode, unsigned long endingNode, string filename){
+			if ((g_edges.begin()->weight == 1) && (g_edges.end()->weight == 1)) // non-weighted graph: BFS-like algorithm
+				return nonWeightedPath(startingNode, endingNode, filename);
+			else if (g_edges.begin()->weight > 0) cout << "BBB"; // weighted graph: Dijkstra algorithm
+			else cout << "CCC"; // we can't do anything
 
 		}
 

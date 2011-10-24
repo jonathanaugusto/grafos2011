@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 
 	graph.buildGraph(argv[1]);
 	graph.bfs(1,argv[1]);
+	graph.nonWeightedPath(1,41,argv[1]);
 
 	cout << "All done! :D" << endl;
 

@@ -92,6 +92,7 @@ class Edge{
 					else if (*to < *(edge.to)) return false;
 				}
 			}
+			return false;
 		}
 
 		/**
