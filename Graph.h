@@ -321,9 +321,7 @@ class Graph{
 			file.flush();
 			file.close();
 
-
 			return connected;
-
 
 		}
 

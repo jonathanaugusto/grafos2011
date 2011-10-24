@@ -82,8 +82,16 @@ class Edge{
 		 * @brief Overload of relational operators.
 		 */
 		bool operator< (Edge edge) const{
-			return weight < edge.weight;
-			// return ((*from < *(edge.from)) + (*to < *(edge.to)));
+			if (weight < edge.weight) return true;
+			else if (weight > edge.weight) return false;
+			else {
+				if (*from < *(edge.from)) return true;
+				else if (*from < *(edge.from)) return false;
+				else {
+					if (*to < *(edge.to)) return true;
+					else if (*to < *(edge.to)) return false;
+				}
+			}
 		}
 
 		/**
@@ -93,6 +101,7 @@ class Edge{
 			out << "e(" << edge.from->label;
 			if (!edge.isDirected) out << "-" << edge.to->label << ")";
 			else out << "->" << edge.to->label << ")";
+			cout << "=" << edge.weight;
 			return out;
 		}
 
