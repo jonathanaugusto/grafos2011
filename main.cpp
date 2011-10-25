@@ -19,9 +19,13 @@ int main(int argc, char *argv[])
 	Graph graph;
 	AdjacencyMatrix adjm;
 
-	graph.build(argv[1]);
-	cout << graph.dijkstra(1,10,argv[1]).first << endl;
-	cout << graph.dijkstra(1,10,argv[1]).second << endl;
+	adjm.build(argv[1]);
+	cout << adjm.dijkstra(1,7,argv[1]).first << endl;
+	vector <unsigned long> v = adjm.dijkstra(1,7,argv[1]).second;
+	cout << v[0];
+	for (unsigned int i = 1; i < v.size(); ++i) {
+		cout << "-" << v[i];
+	}
 	//graph.dijkstra(1,100,argv[1]);
 	//graph.convertToMatrix().dijkstra(1,argv[1]);
 
