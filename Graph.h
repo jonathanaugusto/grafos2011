@@ -381,7 +381,7 @@ class Graph{
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "pathnG:" << end - start << endl;
+			else operationsFile << "pathnG:" << filename << ":" << end - start << endl;
 			operationsFile.flush();
 			operationsFile.close();
 
@@ -457,7 +457,7 @@ class Graph{
 			float end = clock()/CLOCKS_PER_SEC;
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "dijkG:" << end - start << endl;
+			else operationsFile << "dijkG:" << filename << ":" << end - start << endl;
 			operationsFile.flush();
 			operationsFile.close();
 

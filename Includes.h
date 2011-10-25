@@ -43,5 +43,4 @@
 #include "Edge.h"
 #include "Graph.h"
 
-
 #endif /* INCLUDES_H_ */

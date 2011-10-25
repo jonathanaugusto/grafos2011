@@ -17,15 +17,14 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	Graph graph;
-	AdjacencyMatrix adjm;
+	AdjacencyList adjl;
 
-	adjm.build(argv[1]);
-	cout << adjm.dijkstra(1,7,argv[1]).first << endl;
-	vector <unsigned long> v = adjm.dijkstra(1,7,argv[1]).second;
-	cout << v[0];
-	for (unsigned int i = 1; i < v.size(); ++i) {
-		cout << "-" << v[i];
-	}
+	graph.build(argv[1]);
+	adjl = graph.convertToList();
+	pair <unsigned long,vector<unsigned long> > d = adjl.dijkstra(1,7,argv[1]);
+	cout << d.first << endl;
+	cout << d.second << endl;
+
 	//graph.dijkstra(1,100,argv[1]);
 	//graph.convertToMatrix().dijkstra(1,argv[1]);
 

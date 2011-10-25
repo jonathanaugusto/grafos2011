@@ -23,18 +23,22 @@ bool sortNodesByDistance (pair <unsigned long, float*> n1, pair <unsigned long, 
 		return false;
 	}
 
+ostream& operator<< (ostream& out, vector<unsigned long> v){
+	out << v[0];
+	for (unsigned int i = 1; i < v.size(); ++i) {
+		out << "-" << v[i];
+	}
+	return out;
+}
+
 /**
- * @brief Definition of as adjacency matrix.
+ * @brief Definition of an adjacency matrix.
  */
 class AdjacencyMatrix : public std::vector< vector<float> > {
 
-
 	public:
 
-
-
 		bitset<2> weighted; // [0] to weighted graph; [1] to a negative weight
-
 
 		AdjacencyMatrix(){
 			new (this) vector< vector<float> >( 0, vector<float>(0, 0.0));
@@ -292,7 +296,7 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "pathnM:" << end - start << endl;
+			else operationsFile << "pathnM:" << filename << ":" << end - start << endl;
 			operationsFile.flush();
 			operationsFile.close();
 
@@ -347,7 +351,7 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			while (nodes.size() > 0){
 				pair<unsigned long,float*> node = *nodes.begin();
 				nodes.pop_front();
-				cout << "Peguei " << node.first << endl;
+				nodes.size()%500 == 0? cout << nodes.size() << " nodes remaining" << endl : cout << "";
 				for (unsigned int i = 1; i <= getNodesNumber(); i++){
 					if (getAdjacency (node.first, i)!= 0){
 						if (distance[i] > distance[node.first] + getAdjacency (node.first, i)){
@@ -358,17 +362,13 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 					}
 				}
 				nodes.sort(sortNodesByDistance);
-				for (list<pair <unsigned long, float*> >::iterator it = nodes.begin(); it != nodes.end(); it++)
-					cout << "d[" << (*it).first << "]=" << *((*it).second) << " | ";
-				cout << endl;
-
 			}
 
 			float end = clock()/CLOCKS_PER_SEC;
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "dijkM:" << end - start << endl;
+			else operationsFile << "dijkM:" << filename << ":" << end - start << endl;
 			operationsFile.flush();
 			operationsFile.close();
 

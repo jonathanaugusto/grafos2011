@@ -23,7 +23,6 @@ bool sortBySize (set<unsigned long> set1, set<unsigned long> set2){
 	return false;
 }
 
-
 /**
  * @brief Definition of as adjacency list.
  */
@@ -32,12 +31,18 @@ class AdjacencyList : public vector< set <pair <unsigned long, float> > > {
 
 public:
 
+	bitset<2> weighted; // [0] to weighted graph; [1] to a negative weight
+
 	AdjacencyList(){
 		new (this) vector< set <pair <unsigned long, float> > > ( 0, set < pair <unsigned long, float> >());
 	}
 
 	AdjacencyList(unsigned long nodes){
 		new (this) vector< set< pair <unsigned long, float> > >( nodes+1,  set <pair <unsigned long, float>>());
+	}
+
+	unsigned long getNodesNumber(){
+		return size()-1;
 	}
 
 	/**
@@ -258,6 +263,163 @@ public:
 		file.close();
 	}
 
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, unsigned long endingNode, string filename){
+
+		cout << ":: MINIMUM PATH USING ADJACENCY LIST ::" << endl;
+		ofstream file ("pathl_"+filename, ifstream::out);
+
+		queue<unsigned long> searchStack;
+		vector< vector <unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+		vector<bool> flag (getNodesNumber()+1, false);
+
+		float start = clock()/CLOCKS_PER_SEC;
+
+		cout << "Starting node: " << startingNode << "; Ending node: " << endingNode << endl;
+		searchStack.push(startingNode);
+		flag[startingNode] = true;
+		path[startingNode].push_back(startingNode);
+
+		file << "n: " << startingNode << "\troot" << endl;
+
+		while (!searchStack.empty()){
+			unsigned long node = searchStack.front();
+			searchStack.pop();
+			for (set <pair <unsigned long, float> >::iterator it = at(node).begin(); it != at(node).end(); it++){
+				if (flag[it->first] == false){
+					flag[it->first] = true;
+					searchStack.push(it->first);
+					path[it->first] = path[node];
+					path[it->first].push_back(it->first);
+				}
+			}
+		}
+
+		float end = clock()/CLOCKS_PER_SEC;
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "pathnL:" << filename << ":" << end - start << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			if (path[i].size() > 1){
+				file << "n: " << i <<"\tpath: " << path[i][0];
+				for (unsigned int j = 0; j < path[i].size(); ++j) {
+					file << "-" << path[i][j];
+				}
+				file << endl;
+			}
+		}
+
+		file.flush();
+		file.close();
+
+		return path[endingNode];
+
+	}
+
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, string filename){
+		// For all nodes
+		return nonWeightedPath(startingNode, 0, filename);
+	}
+
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		return nonWeightedPath(startingNode, endingNode, "");
+	}
+
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
+
+		cout << ":: DIJKSTRA USING ADJACENCY LIST ::" << endl;
+		ofstream file ("dijkl_"+filename, ifstream::out);
+
+		vector<float> distance (getNodesNumber()+1, numeric_limits<float>::infinity());
+
+		list <pair<unsigned long,float*> > nodes; // V-S
+
+		for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
+			if (i != startingNode) nodes.push_back(make_pair(i,&distance[i]));
+		}
+		distance[startingNode] = 0;
+		nodes.push_front (make_pair(startingNode,&distance[startingNode]));
+		file << "n: " << startingNode << "\troot" << endl;
+
+		vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+		path[startingNode].push_back(startingNode);
+
+		float start = clock()/CLOCKS_PER_SEC;
+
+		while (nodes.size() > 0){
+			pair<unsigned long,float*> node = *nodes.begin();
+			nodes.pop_front();
+			nodes.size()%500 == 0? cout << nodes.size() << " nodes remaining" << endl : cout << "";
+			for (set <pair <unsigned long, float> >::iterator it = at(node.first).begin(); it != at(node.first).end(); it++){
+					if (distance[it->first] > distance[node.first] + it->second){
+						distance[it->first] = distance[node.first] + it->second;
+						path[it->first] = path[node.first];
+						path[it->first].push_back(it->first);
+				}
+			}
+			nodes.sort(sortNodesByDistance);
+		}
+
+		float end = clock()/CLOCKS_PER_SEC;
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "dijkL:" << filename << ":" << end - start << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			if ((path[i].size() > 0)&&(i != startingNode)){
+				file << "n: " << i <<"\tdist: " << distance[i] << "\tpath: " << path[i][0];
+				for (unsigned int j = 1; j < path[i].size(); ++j) {
+					file << "-" << path[i][j];
+				}
+				file << endl;
+			}
+		}
+		file.flush();
+		file.close();
+
+		return make_pair(distance[endingNode],path[endingNode]);
+	}
+
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, string filename){
+		// For all nodes
+		return dijkstra(startingNode, 0, filename);
+	}
+
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		return dijkstra(startingNode, endingNode, "");
+	}
+
+	pair<float, vector<unsigned long> > path(unsigned long startingNode, string filename){
+		// For all nodes
+		if (weighted[0] == false){ // non-weighted graph: BFS-like algorithm
+			vector<unsigned long> p = nonWeightedPath(startingNode, filename);
+			return make_pair(p.size(),p);
+		}
+		else if (weighted[1] == false)
+			return dijkstra (startingNode, filename); // weighted graph: Dijkstra algorithm
+		else cout << "Weighted graph, but negative weights"; // we can't do anything
+		return {};
+	}
+
+	pair<float, vector<unsigned long> > path(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		if (weighted[0] == false){ // non-weighted graph: BFS-like algorithm
+			vector<unsigned long> p = nonWeightedPath(startingNode, endingNode);
+			return make_pair(p.size(),p);
+		}
+		else if (weighted[1] == false)
+			return dijkstra (startingNode, endingNode); // weighted graph: Dijkstra algorithm
+		else cout << "Weighted graph, but negative weights"; // we can't do anything
+		return {};
+	}
 
 
 
