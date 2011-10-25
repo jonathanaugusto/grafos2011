@@ -49,6 +49,15 @@ class Graph{
 
 		/**
 	 	 * @brief Constructor of a graph reserving
+	 	 * space for a given numbers of nodes.
+	 	 * @param	nodes_n	Number of nodes.
+	 	 */
+		Graph (unsigned long nodes_n){
+			g_nodes.reserve(nodes_n+1);
+		}
+
+		/**
+	 	 * @brief Constructor of a graph reserving
 	 	 * space for a given numbers of edges and of nodes.
 	 	 * @param	nodes_n	Number of nodes.
 	 	 * @param	edges_n	Number of edges.
@@ -371,7 +380,6 @@ class Graph{
 						searchStack.push(node2);
 						path[node2->label] = path[node->label];
 						path[node2->label].push_back(node2);
-						//if (node2->label == endingNode) break;
 
 					}
 				}
@@ -400,13 +408,11 @@ class Graph{
 				file.flush();
 				file.close();
 			}
-			cout << "blablabla";
 
 			for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
 				g_nodes[i].unflag();
 			}
 
-			if (endingNode != 0) return path[endingNode];
 			return {};
 
 		}
@@ -513,6 +519,91 @@ class Graph{
 				return dijkstra (startingNode, endingNode); // weighted graph: Dijkstra algorithm
 			else cout << "Weighted graph, but negative weights"; // we can't do anything
 			return {};
+		}
+
+		void prim (unsigned long startingNode, string filename){
+
+			cout << ":: PRIM USING GRAPH ::" << endl;
+
+			Graph graph(getNodesNumber());
+			list<Edge *> cut;
+			for (set <Edge>::iterator it = this->g_edges.begin(); it != this->g_edges.end(); it++){
+				Edge edge = *it;
+				edge.flag();
+			}
+
+			for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
+				g_nodes[i].distance = numeric_limits<float>::infinity();
+			}
+
+			Node *starting = &g_nodes[startingNode];
+			starting->flag();
+
+			for (set <Edge *>::iterator it = starting->edges.begin(); it != starting->edges.end(); it++) {
+				Edge *edge = *it;
+				cut.push_back(edge);
+			}
+			cut.sort(sortByWeight);
+
+			graph.g_edges.insert(*cut.front());
+
+			float start = clock()/CLOCKS_PER_SEC;
+			unsigned long nodes_n = 1;
+			while (nodes_n <= getNodesNumber()){
+
+				Edge *edge = cut.front();
+
+				cut.pop_front();
+
+				Node* node2;
+				edge->to->label == graph.g_nodes[edge->to->label].label? node2 = edge->from : node2 = edge->to ;
+
+				if ((node2->isflagged() == false)&&(node2->distance > edge->weight)){
+					graph.g_edges.insert(*edge);
+					node2->flag();
+					graph.g_nodes[node2->label] = *node2;
+					node2->distance = edge->weight;
+					nodes_n++;
+
+					for (set <Edge *>::iterator it = g_nodes[node2->label].edges.begin(); it != g_nodes[node2->label].edges.end(); ++it) {
+						Edge *edge = *it;
+
+						if (edge->test() == false) {
+							cut.push_back(edge);
+							edge->flag();
+						}
+					}
+
+				cut.sort(sortByWeight);
+
+				if (nodes_n == getNodesNumber()) break;
+				}
+			}
+
+			float end = clock()/CLOCKS_PER_SEC;
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "primG:" << filename << ":" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			float total = .0;
+			for (set<Edge>::iterator it =  graph.g_edges.begin(); it != graph.g_edges.end(); it++)
+					total += (*it).weight;
+			cout << "MST weight: " << total << endl;
+
+			if (filename != "") {
+				ofstream file ("primg_"+filename, ifstream::out);
+				file << total << endl;
+				for (set<Edge>::iterator it =  graph.g_edges.begin(); it != graph.g_edges.end(); it++)
+						file << (*it).from->label << " " << (*it).to->label << " " << (*it).weight << endl;
+				file.flush();
+				file.close();
+			}
+
+			for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
+				g_nodes[i].unflag();
+			}
 		}
 };
 

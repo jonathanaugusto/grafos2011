@@ -37,6 +37,11 @@ class Edge{
 		bool isDirected;
 
 		/**
+		 *
+		 */
+		bitset<1> bit_flag;
+
+		/**
 		 * @brief Constructor for class Edge.
 		 */
 		Edge(){
@@ -55,6 +60,7 @@ class Edge{
 			weight = edgeWeight;
 			isDirected = isDir;
 			from = to = NULL;
+			bit_flag.reset();
 		}
 
 		/**
@@ -102,14 +108,27 @@ class Edge{
 			out << "e(" << edge.from->label;
 			if (!edge.isDirected) out << "-" << edge.to->label << ")";
 			else out << "->" << edge.to->label << ")";
-			cout << "=" << edge.weight;
+			out << "=" << edge.weight;
 			return out;
 		}
 
+		void flag(){
+			bit_flag.set();
+		}
+
+		void unflag(){
+			bit_flag.reset();
+		}
+
+		bool test(){
+			return bit_flag[0];
+		}
+
+
 		/**
 		 * @brief Add nodes to an edge.
-		 * @param	fromNode	Pointer to edge that connects from.
-		 * 			toNode		Pointer to edge that connects to.
+		 * @param	fromNode	Pointer to node that connects from.
+		 * 			toNode		Pointer to node that connects to.
 		 */
 		void addNodes (Node *fromNode, Node *toNode){
 			from = fromNode;
@@ -162,6 +181,12 @@ list<Node *> Node::getConnectedNodes(){
 	return connected;
 }
 
+
+bool sortByWeight (const Edge *edge1, const Edge *edge2){
+		 if (*edge1 < *edge2)
+			 return true;
+		 return false;
+	}
 
 
 
