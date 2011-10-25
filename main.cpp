@@ -18,13 +18,12 @@ int main(int argc, char *argv[])
 	}
 	Graph graph;
 	AdjacencyMatrix adjm;
-	AdjacencyList adjl;
 
 	graph.build(argv[1]);
-	adjm.build(argv[1]);
-
-	graph.dijkstra(1,7,argv[1]);
-	adjm.dijkstra(1,7,argv[1]);
+	cout << graph.dijkstra(1,10,argv[1]).first << endl;
+	cout << graph.dijkstra(1,10,argv[1]).second << endl;
+	//graph.dijkstra(1,100,argv[1]);
+	//graph.convertToMatrix().dijkstra(1,argv[1]);
 
 	cout << "All done! :D" << endl;
 

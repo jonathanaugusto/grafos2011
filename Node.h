@@ -86,21 +86,20 @@ class Node{
 		bool operator< (Node node) const{
 			return label < node.label;
 		}
-		struct sortByDistance{
-			bool operator() (Node *node1, Node *node2){
-				if (node1->distance < node2->distance)
-					return true;
-				else if (node1->label < node2-> label)
-					return true;
-				return false;
-			}
-		};
 
 		/**
 		 * @brief Overload of output insertion operator.
 		 */
 		friend ostream& operator<< (ostream& out, Node node){
 			out << "n" << node.label << " (d=" << node.edges.size() << ")";
+			return out;
+		}
+
+		friend ostream& operator<< (ostream& out, vector<Node *> v){
+			out << v[0]->label;
+			for (unsigned int i = 1; i < v.size(); ++i) {
+				out << "-" << v[i]->label;
+			}
 			return out;
 		}
 
@@ -132,6 +131,16 @@ class Node{
 
 bool sortByLabel (Node *node1, Node *node2){
 	return node1->label < node2->label;
+}
+
+bool sortByDistance (Node *node1, Node *node2){
+	if (node1->distance < node2->distance)
+		return true;
+	else if (node1->distance == node2->distance){
+		if (node1->label < node2->label) return true;
+		else return false;
+	}
+	return false;
 }
 
 #endif

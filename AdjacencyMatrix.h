@@ -293,7 +293,6 @@ public:
 		for (unsigned int i = 1; i <= getNodesNumber(); i++){
 			if (path[i].size() > 1){
 				file << "n: " << i <<"\tpath: " << path[i][0];
-
 				for (unsigned int j = 0; j < path[i].size(); ++j) {
 					file << "-" << path[i][j];
 				}
@@ -308,6 +307,17 @@ public:
 
 	}
 
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, string filename){
+		// For all nodes
+		return nonWeightedPath(startingNode, 0, filename);
+	}
+
+	vector<unsigned long> nonWeightedPath(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		return nonWeightedPath(startingNode, endingNode, "");
+	}
+
+
 	struct sortByDistance{
 				bool operator() (pair <unsigned long,float*> p1, pair <unsigned long,float*> p2){
 					if (*(p1.second) < *(p2.second))
@@ -318,7 +328,7 @@ public:
 				}
 	};
 
-	vector<unsigned long> dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
 
 		cout << ":: DIJKSTRA USING ADJACENCY MATRIX ::" << endl;
 		ofstream file ("dijkm_"+filename, ifstream::out);
@@ -338,7 +348,6 @@ public:
 		file << "n: " << startingNode << "\troot" << endl;
 
 		while (nodes.size() > 0){
-			nodes.size() % 10 == 0 ? cout << nodes.size() << " nodes remaining" << endl : cout << "";
 			pair <unsigned long,float*> node = *nodes.begin();
 			nodes.erase(nodes.begin());
 			for (unsigned int i = 1; i <= getNodesNumber(); i++){
@@ -372,17 +381,42 @@ public:
 		file.flush();
 		file.close();
 
-		return path[endingNode];
+		return make_pair(distance[endingNode],path[endingNode]);
 	}
 
-	vector <unsigned long> path(unsigned long startingNode, unsigned long endingNode, string filename){
-		if (weighted[0] = false) // non-weighted graph: BFS-like algorithm
-			return nonWeightedPath(startingNode, endingNode, filename);
-		else if (weighted[1] = false)
-			return dijkstra (startingNode, endingNode, filename); // weighted graph: Dijkstra algorithm
+
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, string filename){
+		// For all nodes
+		return dijkstra(startingNode, 0, filename);
+	}
+
+	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		return dijkstra(startingNode, endingNode, "");
+	}
+
+	pair<float, vector<unsigned long> > path(unsigned long startingNode, string filename){
+		// For all nodes
+		if (weighted[0] == false){ // non-weighted graph: BFS-like algorithm
+			vector<unsigned long> p = nonWeightedPath(startingNode, filename);
+			return make_pair(p.size(),p);
+		}
+		else if (weighted[1] == false)
+			return dijkstra (startingNode, filename); // weighted graph: Dijkstra algorithm
 		else cout << "Weighted graph, but negative weights"; // we can't do anything
 		return {};
+	}
 
+	pair<float, vector<unsigned long> > path(unsigned long startingNode, unsigned long endingNode){
+		// For a specific node
+		if (weighted[0] == false){ // non-weighted graph: BFS-like algorithm
+			vector<unsigned long> p = nonWeightedPath(startingNode, endingNode);
+			return make_pair(p.size(),p);
+		}
+		else if (weighted[1] == false)
+			return dijkstra (startingNode, endingNode); // weighted graph: Dijkstra algorithm
+		else cout << "Weighted graph, but negative weights"; // we can't do anything
+		return {};
 	}
 
 };
