@@ -96,7 +96,7 @@ class Graph{
 		 * distribution for degrees of nodes.
 		 *
 		 */
-		float* getEmpiricalDistribution(){
+		float* getEmpiricalDegreeDistribution(){
 
 			float *node_d = new float[getNodesNumber()];
 			for (unsigned long i = 0; i < getNodesNumber(); i++)
@@ -108,6 +108,7 @@ class Graph{
 
 			return node_d;
 		}
+
 
 		/**
 		 * @brief Calculates and returns
@@ -135,6 +136,34 @@ class Graph{
 				if (g_edges != graph.g_edges) return false;
 			return true;
 		}
+
+
+		/**
+		 * @brief Calculates and returns empirical
+		 * distribution for distances between node pairs.
+		 *
+		 */
+		pair<map<float,float>,float> getEmpiricalAndMedium(){
+
+			map<float,float> distances;
+			float medium = .0;
+
+			for (unsigned int i = 1; i < getNodesNumber(); i++)
+				for (unsigned int j = i+1; j <= getNodesNumber(); j++){
+					long dist = dijkstra(i, j, "").first;
+					distances[dist]++;
+					medium += dist;
+				}
+
+			medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
+
+			for (unsigned int i = 0; i < distances.size(); i++){
+				distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
+			}
+
+			return make_pair(distances,medium);
+		}
+
 
 
 		/**
@@ -211,18 +240,37 @@ class Graph{
 		void buildInformationFile (string filename){
 
 			ofstream file ("info_"+filename, ifstream::out);
-			file << "# n = " << getEdgesNumber() << endl;
-			file << "# m = " << getNodesNumber() << endl;
+			file << "# n = " << getNodesNumber() << endl;
+			file << "# m = " << getEdgesNumber() << endl;
 			file << "# d_medio = " << getMediumDegree() << endl;
 
-			float *nodeDegrees = getEmpiricalDistribution();
+			float *nodeDegrees = getEmpiricalDegreeDistribution();
 
 			for (unsigned long i = 0; i < getNodesNumber()-1; i++)
-				if (nodeDegrees[i]!= 0) file << i << " " << nodeDegrees[i] << endl;
+				file << i << " " << nodeDegrees[i] << endl;
 
 			file.flush();
 			file.close();
 		}
+
+		void buildInformationFile2 (string filename){
+
+			ofstream file ("info2_"+filename, ifstream::out);
+			file << "# n = " << getNodesNumber() << endl;
+			file << "# m = " << getEdgesNumber() << endl;
+
+			//file << "# d_media = " << getMediumDistance() << endl;
+
+			pair<map<float,float>,float> pair = getEmpiricalAndMedium();
+			file << "# d_med = " << pair.second << endl;
+
+			for (unsigned long i = 0; i < pair.first.size(); i++)
+				file << i << " " << pair.first[i] << endl;
+
+			file.flush();
+			file.close();
+		}
+
 
 		/**
 		 * @brief Builds and returns adjacency matrix of a graph.
@@ -430,7 +478,7 @@ class Graph{
 
 		pair<float, vector<Node *> > dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
 
-			cout << ":: DIJKSTRA USING GRAPH ::" << endl;
+			//cout << ":: DIJKSTRA USING GRAPH ::" << endl;
 
 			vector <vector<Node *> > path (g_nodes.size()+1, {});
 			list <Node *> nodes; // V-S
