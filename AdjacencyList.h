@@ -64,6 +64,51 @@ public:
 		return 0;
 
 	}
+	void build(string filename){
+
+		cout << ":: CREATE ADJACENCY LIST ::" << endl;
+
+		unsigned long nodes_n, node1, node2, weight, edges_n;
+
+		ifstream file (filename, ifstream::in);
+		if (file.fail()) cout << "Read error :(" << endl;
+
+		clock_t start = clock();
+
+		file >> nodes_n;
+
+		cout << "File: " << filename << endl;
+
+		new (this) AdjacencyList (nodes_n);
+
+		cout << "Created " << nodes_n << " nodes in adjacency matrix" << endl;
+
+		edges_n = 0;
+		while (!file.eof()){
+			file >> node1;
+			file >> node2;
+			if (file.eof()) break;
+			file >> weight;
+			if (weight != 1) weighted[0] = true;
+			if (weight < 0) weighted[1] = true;
+			at(node1).insert(make_pair(node2,weight));
+			at(node2).insert(make_pair(node1,weight));
+			edges_n++;
+		}
+
+		cout << "Created " << edges_n << " edges in adjacency matrix" << endl;
+
+		clock_t end = clock();
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "buildFL:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		file.close();
+	}
+
 
 	/**
 	 * @brief Breadth-first search using adjacency list.

@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
 	}
 	Graph graph;
 	AdjacencyList adjl;
-
 	graph.build(argv[1]);
-	adjl = graph.convertToList();
+	adjl.build(argv[1]);
+	graph.dijkstra(1,7,argv[1]);
 	pair <unsigned long,vector<unsigned long> > d = adjl.dijkstra(1,7,argv[1]);
 	cout << d.first << endl;
 	cout << d.second << endl;
