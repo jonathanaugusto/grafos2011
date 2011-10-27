@@ -117,7 +117,7 @@ class Node{
 			bit_flag.reset();
 		}
 
-		bool isflagged(){
+		bool test(){
 			return bit_flag.test(0);
 		}
 

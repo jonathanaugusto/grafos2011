@@ -81,7 +81,10 @@ class Edge{
 		 * @brief Overload of relational operators.
 		 */
 		bool operator== (Edge edge) const{
-			return ((from == edge.from) && (to == edge.to) && (isDirected == false) && (edge.isDirected == false));
+			return ((from == edge.from) && (to == edge.to) && (weight == edge.weight));
+		}
+		bool operator== (Edge *edge){
+			return ((from == edge->from) && (to == edge->to) && (weight == edge->weight));
 		}
 
 		/**
@@ -139,9 +142,36 @@ class Edge{
 
 		struct compare {
 			bool operator() (const Edge &edge1, const Edge &edge2){
-				return edge1 < edge2;
+				if (edge1.weight < edge2.weight) return true;
+				else if (edge1.weight > edge2.weight) return false;
+				else {
+					if (*edge1.from < *(edge2.from)) return true;
+					else if (*edge1.from < *(edge2.from)) return false;
+					else {
+						if (*edge1.to < *(edge2.to)) return true;
+						else if (*edge1.to < *(edge2.to)) return false;
+					}
+				}
+				return false;
 			}
 		};
+
+		struct comparePointers {
+			bool operator() (const Edge *edge1, const Edge *edge2){
+				if (edge1->weight < edge2->weight) return true;
+				else if (edge1->weight > edge2->weight) return false;
+				else {
+					if (*edge1->from < *(edge2->from)) return true;
+					else if (*edge1->from < *(edge2->from)) return false;
+					else {
+						if (*edge1->to < *(edge2->to)) return true;
+						else if (*edge1->to < *(edge2->to)) return false;
+					}
+				}
+				return false;
+			}
+		};
+
 };
 
 /**

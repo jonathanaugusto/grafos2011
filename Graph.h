@@ -261,14 +261,25 @@ class Graph{
 
 			//file << "# d_media = " << getMediumDistance() << endl;
 
+			float start = clock()/CLOCKS_PER_SEC;
+
 			pair<map<float,float>,float> pair = getEmpiricalAndMedium();
 			file << "# d_med = " << pair.second << endl;
 
 			for (unsigned long i = 0; i < pair.first.size(); i++)
 				file << i << " " << pair.first[i] << endl;
 
+			float end = clock()/CLOCKS_PER_SEC;
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "info2:" << filename << ":" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
 			file.flush();
 			file.close();
+
 		}
 
 
@@ -371,7 +382,7 @@ class Graph{
 				list <Node *> connectedNodes = node->getConnectedNodes();
 				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
 					Node *node2 = *it;
-					if (node2->isflagged() == false){
+					if (node2->test() == false){
 						node2->flag();
 						searchStack.push(node2);
 						dadNode[node2->label] = node;
@@ -423,7 +434,7 @@ class Graph{
 				list <Node *> connectedNodes = node->getConnectedNodes();
 				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
 					Node *node2 = *it;
-					if (node2->isflagged() == false){
+					if (node2->test() == false){
 						node2->flag();
 						searchStack.push(node2);
 						path[node2->label] = path[node->label];
@@ -511,7 +522,9 @@ class Graph{
 			float end = clock()/CLOCKS_PER_SEC;
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "dijkG:" << filename << ":" << end - start << endl;
+			else {
+				if(filename != "") 	operationsFile << "dijkG:" << filename << ":" << end - start << endl;
+			}
 			operationsFile.flush();
 			operationsFile.close();
 
@@ -574,7 +587,7 @@ class Graph{
 			cout << ":: PRIM USING GRAPH ::" << endl;
 
 			Graph graph(getNodesNumber());
-			list<Edge *> cut;
+			set<Edge *,Edge::comparePointers> cut;
 			for (set <Edge>::iterator it = this->g_edges.begin(); it != this->g_edges.end(); it++){
 				Edge edge = *it;
 				edge.flag();
@@ -589,24 +602,28 @@ class Graph{
 
 			for (set <Edge *>::iterator it = starting->edges.begin(); it != starting->edges.end(); it++) {
 				Edge *edge = *it;
-				cut.push_back(edge);
+				cut.insert(edge);
 			}
-			cut.sort(sortByWeight);
 
-			graph.g_edges.insert(*cut.front());
+
+			cout << "corte = ";
+			for (set<Edge *>::iterator it = cut.begin(); it != cut.end(); it++) {
+				cout << **it << " ";
+			}
+			cout << endl;
 
 			float start = clock()/CLOCKS_PER_SEC;
 			unsigned long nodes_n = 1;
 			while (nodes_n <= getNodesNumber()){
 
-				Edge *edge = cut.front();
-
-				cut.pop_front();
-
+				Edge *edge = *(cut.begin());
+				cut.erase(cut.begin());
+				graph.g_edges.insert(*edge);
+				cout << "Peguei " << *edge << endl;
 				Node* node2;
 				edge->to->label == graph.g_nodes[edge->to->label].label? node2 = edge->from : node2 = edge->to ;
 
-				if ((node2->isflagged() == false)&&(node2->distance > edge->weight)){
+				if ((node2->test() == false)&&(node2->distance > edge->weight)){
 					graph.g_edges.insert(*edge);
 					node2->flag();
 					graph.g_nodes[node2->label] = *node2;
@@ -617,14 +634,19 @@ class Graph{
 						Edge *edge = *it;
 
 						if (edge->test() == false) {
-							cut.push_back(edge);
 							edge->flag();
+							cut.insert(edge);
 						}
 					}
 
-				cut.sort(sortByWeight);
 
-				if (nodes_n == getNodesNumber()) break;
+				cout << "corte = ";
+				for (set<Edge *>::iterator it = cut.begin(); it != cut.end(); it++) {
+					cout << **it << " ";
+				}
+				cout << endl;
+
+				if (nodes_n >= getNodesNumber()) break;
 				}
 			}
 

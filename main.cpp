@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	graph.build(argv[1]);
 	/*for (set <Edge *>::iterator it = graph.g_nodes[1].edges.begin(); it != graph.g_nodes[1].edges.end(); it++)
 		cout << **it << endl;*/
-	graph.buildInformationFile2(argv[1]);
+	graph.prim(1,argv[1]);
 
 	//graph.dijkstra(1,100,argv[1]);
 	//graph.convertToMatrix().dijkstra(1,argv[1]);
