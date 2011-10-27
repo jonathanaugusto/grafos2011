@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <vector>
 #include <string>
@@ -32,6 +33,8 @@
 #include <queue>
 #include <bitset>
 #include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <list>
 #include <set>
 #include <map>
@@ -39,6 +42,7 @@
 #include <utility>
 #include <ctime>
 #include <limits>
+#include <thread>
 
 #include "Edge.h"
 #include "Graph.h"

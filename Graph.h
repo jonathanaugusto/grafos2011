@@ -137,33 +137,62 @@ class Graph{
 			return true;
 		}
 
-
 		/**
 		 * @brief Calculates and returns empirical
 		 * distribution for distances between node pairs.
 		 *
 		 */
-		pair<map<float,float>,float> getEmpiricalAndMedium(){
+		pair<map<float,float>,float> getEmpiricalAndMedium(string filename){
 
 			map<float,float> distances;
 			float medium = .0;
 
-			for (unsigned int i = 1; i < getNodesNumber(); i++)
-				for (unsigned int j = i+1; j <= getNodesNumber(); j++){
-					long dist = dijkstra(i, j, "").first;
-					distances[dist]++;
-					medium += dist;
+			std::thread t(&parallelDijkstra(this,1,10,filename));
+
+
+			cout << "Dijkstra in node ";
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				cout << i << " ";
+				dijkstra(i, filename);
+			}
+			cout << endl;
+
+			cout << "Retrieving Dijkstra file from node ";
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				cout << i << " ";
+				stringstream ss;
+				string s;
+				ss << i;
+				s = ss.str();
+				ifstream file ("dijkg"+s+"_"+filename, ifstream::in);
+
+				unsigned int start, end;
+				float distance;
+				string path;
+
+				file >> start;
+				while (!file.eof()){
+					file >> end;
+					if (file.eof()) break;
+					file >> distance;
+					file >> path;
+					//	cout << end << " " << distance << " " << path << endl;
+					distances[distance]++;
+					medium += distance;
 				}
+				file.close();
+			}
 
 			medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
+			medium /= 2;
 
 			for (unsigned int i = 0; i < distances.size(); i++){
 				distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
 			}
 
 			return make_pair(distances,medium);
-		}
 
+		}
 
 
 		/**
@@ -239,7 +268,7 @@ class Graph{
 		 */
 		void buildInformationFile (string filename){
 
-			ofstream file ("info_"+filename, ifstream::out);
+			ofstream file ("info_"+filename, ofstream::out);
 			file << "# n = " << getNodesNumber() << endl;
 			file << "# m = " << getEdgesNumber() << endl;
 			file << "# d_medio = " << getMediumDegree() << endl;
@@ -255,7 +284,7 @@ class Graph{
 
 		void buildInformationFile2 (string filename){
 
-			ofstream file ("info2_"+filename, ifstream::out);
+			ofstream file ("info2_"+filename, ofstream::out);
 			file << "# n = " << getNodesNumber() << endl;
 			file << "# m = " << getEdgesNumber() << endl;
 
@@ -263,7 +292,7 @@ class Graph{
 
 			float start = clock()/CLOCKS_PER_SEC;
 
-			pair<map<float,float>,float> pair = getEmpiricalAndMedium();
+			pair<map<float,float>,float> pair = getEmpiricalAndMedium(filename);
 			file << "# d_med = " << pair.second << endl;
 
 			for (unsigned long i = 0; i < pair.first.size(); i++)
@@ -354,7 +383,7 @@ class Graph{
 		set<Node *> bfs(unsigned long startingNode,  string filename){
 
 			cout << ":: BFS USING GRAPH ::" << endl;
-			ofstream file ("bfsg_"+filename, ifstream::out);
+			ofstream file ("bfsg_"+filename, ofstream::out);
 
 			queue<Node *> searchStack;
 			Node* dadNode[g_nodes.size()+1];
@@ -453,7 +482,7 @@ class Graph{
 			operationsFile.close();
 
 			if (filename != "") {
-				ofstream file ("pathg_"+filename, ifstream::out);
+				ofstream file ("pathg_"+filename, ofstream::out);
 				file << "n: " << startingNode << "\troot" << endl;
 				for (unsigned int i = 1; i < path.size(); i++){
 					if ((path[i].size() > 1) && (i != startingNode)){
@@ -529,11 +558,13 @@ class Graph{
 			operationsFile.close();
 
 			if (filename != "") {
-				ofstream file ("dijkg_"+filename, ifstream::out);
-				file << "n: " << startingNode << "\troot" << endl;
+				stringstream ss; string s;
+				ss << startingNode; s = ss.str();
+				ofstream file ("dijkg"+s+"_"+filename, ofstream::out);
+				file << startingNode << endl;
 				for (unsigned int i = 1; i < path.size(); i++){
 					if ((path[i].size() > 0)&&(i != startingNode)){
-						file << "n: " << i <<"\tdist: " << g_nodes[i].distance << "\tpath: " << path[i][0]->label;
+						file << i << " " << g_nodes[i].distance << " " << path[i][0]->label;
 						for (unsigned int j = 1; j < path[i].size(); ++j) {
 							file << "-" << path[i][j]->label;
 						}
@@ -586,51 +617,55 @@ class Graph{
 
 			cout << ":: PRIM USING GRAPH ::" << endl;
 
-			Graph graph(getNodesNumber());
-			set<Edge *,Edge::comparePointers> cut;
-			for (set <Edge>::iterator it = this->g_edges.begin(); it != this->g_edges.end(); it++){
-				Edge edge = *it;
-				edge.flag();
-			}
+			float start = clock()/CLOCKS_PER_SEC;
 
+			// New Graph object represents set of edges and nodes already verified.
+			Graph graph(getNodesNumber());
+			graph.g_nodes.reserve(getNodesNumber());
+
+			// Set represents border edges (sorted by weight)
+			set<Edge *,Edge::comparePointers> cut;
+
+			// Initialization: all node costs are infinity, and all edges are unmarked.
 			for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
 				g_nodes[i].distance = numeric_limits<float>::infinity();
 			}
+			for (set <Edge>::iterator it = this->g_edges.begin(); it != this->g_edges.end(); it++){
+				Edge edge = *it;
+				edge.unflag();
+			}
 
+			// Initialization: starting node is marked, and all its edges are added to border.
 			Node *starting = &g_nodes[startingNode];
 			starting->flag();
-
 			for (set <Edge *>::iterator it = starting->edges.begin(); it != starting->edges.end(); it++) {
 				Edge *edge = *it;
 				cut.insert(edge);
 			}
 
-
-			cout << "corte = ";
-			for (set<Edge *>::iterator it = cut.begin(); it != cut.end(); it++) {
-				cout << **it << " ";
-			}
-			cout << endl;
-
-			float start = clock()/CLOCKS_PER_SEC;
 			unsigned long nodes_n = 1;
+
 			while (nodes_n <= getNodesNumber()){
 
+				// Catch lightest border edge (first at ordered set)
 				Edge *edge = *(cut.begin());
 				cut.erase(cut.begin());
+
+				// If it's still a border edge, add it at graph
+				if ((edge->from->test() xor edge->to->test()))
 				graph.g_edges.insert(*edge);
-				cout << "Peguei " << *edge << endl;
+
+				// Go over border through this edge.
+				// If that node is marked, it's already inside.
 				Node* node2;
-				edge->to->label == graph.g_nodes[edge->to->label].label? node2 = edge->from : node2 = edge->to ;
+				edge->to->test() == true? node2 = edge->from : node2 = edge->to ;
 
 				if ((node2->test() == false)&&(node2->distance > edge->weight)){
-					graph.g_edges.insert(*edge);
 					node2->flag();
-					graph.g_nodes[node2->label] = *node2;
 					node2->distance = edge->weight;
 					nodes_n++;
 
-					for (set <Edge *>::iterator it = g_nodes[node2->label].edges.begin(); it != g_nodes[node2->label].edges.end(); ++it) {
+					for (set <Edge *>::iterator it = node2->edges.begin(); it != node2->edges.end(); ++it) {
 						Edge *edge = *it;
 
 						if (edge->test() == false) {
@@ -638,20 +673,12 @@ class Graph{
 							cut.insert(edge);
 						}
 					}
-
-
-				cout << "corte = ";
-				for (set<Edge *>::iterator it = cut.begin(); it != cut.end(); it++) {
-					cout << **it << " ";
 				}
-				cout << endl;
-
-				if (nodes_n >= getNodesNumber()) break;
-				}
+				if (nodes_n == getNodesNumber()) break;
 			}
 
 			float end = clock()/CLOCKS_PER_SEC;
-			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			ofstream operationsFile (OPERATIONSFILE_NAME, ofstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
 			else operationsFile << "primG:" << filename << ":" << end - start << endl;
 			operationsFile.flush();
@@ -661,9 +688,10 @@ class Graph{
 			for (set<Edge>::iterator it =  graph.g_edges.begin(); it != graph.g_edges.end(); it++)
 					total += (*it).weight;
 			cout << "MST weight: " << total << endl;
+			cout << "Edges: " << graph.getEdgesNumber() << endl;
 
 			if (filename != "") {
-				ofstream file ("primg_"+filename, ifstream::out);
+				ofstream file ("primg_"+filename, ofstream::out);
 				file << total << endl;
 				for (set<Edge>::iterator it =  graph.g_edges.begin(); it != graph.g_edges.end(); it++)
 						file << (*it).from->label << " " << (*it).to->label << " " << (*it).weight << endl;
@@ -675,6 +703,12 @@ class Graph{
 				g_nodes[i].unflag();
 			}
 		}
+};
+
+void parallelDijkstra(Graph graph, unsigned int first_node, unsigned int last_node, string filename){
+	for (unsigned int i = first_node; i <= last_node; i++){
+		graph.dijkstra(i, filename);
+	}
 };
 
 #endif

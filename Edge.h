@@ -83,7 +83,7 @@ class Edge{
 		bool operator== (Edge edge) const{
 			return ((from == edge.from) && (to == edge.to) && (weight == edge.weight));
 		}
-		bool operator== (Edge *edge){
+		bool operator== (Edge *edge) const{
 			return ((from == edge->from) && (to == edge->to) && (weight == edge->weight));
 		}
 
@@ -145,11 +145,11 @@ class Edge{
 				if (edge1.weight < edge2.weight) return true;
 				else if (edge1.weight > edge2.weight) return false;
 				else {
-					if (*edge1.from < *(edge2.from)) return true;
-					else if (*edge1.from < *(edge2.from)) return false;
+					if (edge1.from->label < edge2.from->label) return true;
+					else if (edge1.from->label < edge2.from->label) return false;
 					else {
-						if (*edge1.to < *(edge2.to)) return true;
-						else if (*edge1.to < *(edge2.to)) return false;
+						if (edge1.to->label < edge2.to->label) return true;
+						else if (edge1.to->label < edge2.to->label) return false;
 					}
 				}
 				return false;
@@ -161,11 +161,11 @@ class Edge{
 				if (edge1->weight < edge2->weight) return true;
 				else if (edge1->weight > edge2->weight) return false;
 				else {
-					if (*edge1->from < *(edge2->from)) return true;
-					else if (*edge1->from < *(edge2->from)) return false;
+					if (edge1->from->label < edge2->from->label) return true;
+					else if (edge1->from->label < edge2->from->label) return false;
 					else {
-						if (*edge1->to < *(edge2->to)) return true;
-						else if (*edge1->to < *(edge2->to)) return false;
+						if (edge1->to->label < edge2->to->label) return true;
+						else if (edge1->to->label < edge2->to->label) return false;
 					}
 				}
 				return false;
@@ -184,19 +184,7 @@ void Node::addEdge(Edge *edge){
 	it = edges.find (edge);
 	if (it == edges.end())
 		edges.insert(edge);
-
 };
-
-/**
- * @brief Display list of connected edges.
- */
-void Node::printEdges (){
-		cout << "Edges connected to node " <<  label << ":" << endl;
-		for (set<Edge *>::iterator it=edges.begin(); it!=edges.end(); it++)
-			cout << *it << endl;
-		cout << endl;
-}
-
 
 list<Node *> Node::getConnectedNodes(){
 	list<Node *> connected;
