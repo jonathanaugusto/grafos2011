@@ -15,13 +15,18 @@
 #include "AdjacencyMatrix.h"
 #include "AdjacencyList.h"
 
-
 using namespace std;
 
 /* Generate overload of all relational functions
  * deriving their behavior from operator== and operator< .
  */
 using namespace rel_ops;
+
+using namespace boost;
+using boost::thread;
+using boost::thread_group;
+
+void pd (Graph, unsigned int, unsigned int, string);
 
 /**
  * @brief Abstraction of a graph.
@@ -147,19 +152,20 @@ class Graph{
 			map<float,float> distances;
 			float medium = .0;
 
-			std::thread t(&parallelDijkstra(this,1,10,filename));
+			cout << "Running Dijkstra...";
 
-
-			cout << "Dijkstra in node ";
-			for (unsigned int i = 1; i <= getNodesNumber(); i++){
-				cout << i << " ";
-				dijkstra(i, filename);
+			boost::thread_group threads;
+			for (unsigned int i = 0; i < 10; i++){
+				Graph graph = *this;
+				boost::thread *thread = new boost::thread(&pd,graph,(getNodesNumber()/NUM_THREADS)*i+1,(getNodesNumber()/NUM_THREADS)*(i+1),filename);
+				threads.add_thread(thread);
 			}
+			threads.join_all();
+
 			cout << endl;
 
-			cout << "Retrieving Dijkstra file from node ";
+			cout << "Retrieving Dijkstra files...";
 			for (unsigned int i = 1; i <= getNodesNumber(); i++){
-				cout << i << " ";
 				stringstream ss;
 				string s;
 				ss << i;
@@ -182,12 +188,16 @@ class Graph{
 				}
 				file.close();
 			}
+			cout << endl;
 
 			medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
 			medium /= 2;
 
 			for (unsigned int i = 0; i < distances.size(); i++){
 				distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
+			}
+			for (unsigned int i = 0; i < distances.size(); i++){
+				cout << i << " " << distances[i];
 			}
 
 			return make_pair(distances,medium);
@@ -705,10 +715,11 @@ class Graph{
 		}
 };
 
-void parallelDijkstra(Graph graph, unsigned int first_node, unsigned int last_node, string filename){
-	for (unsigned int i = first_node; i <= last_node; i++){
-		graph.dijkstra(i, filename);
+
+void pd (Graph graph, unsigned int first_node, unsigned int last_node, string filename){
+		for (unsigned int i = first_node; i <= last_node; i++){
+			graph.dijkstra(i, filename);
+		}
 	}
-};
 
 #endif

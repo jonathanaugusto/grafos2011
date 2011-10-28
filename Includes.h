@@ -10,6 +10,7 @@
 
 #pragma once  // Solve cross-reference (Node includes Edge, that includes Node...)
 
+#define BOOST_THREAD_USE_LIB
 #define OPERATIONSFILE_SYNTAX	"# -- Syntax\n\
 								 # operation:time:memory\n\
 								 # -- Structure acronyms\n\
@@ -22,6 +23,7 @@
 								 # [b,d]fsA: bfs/dfs from structure A\n\
 								 # ccA: found connected components from structure A"
 #define OPERATIONSFILE_NAME "operations.txt"
+#define NUM_THREADS 10
 
 #include <iostream>
 #include <fstream>
@@ -43,6 +45,8 @@
 #include <ctime>
 #include <limits>
 #include <thread>
+
+#include <boost/thread/thread.hpp>
 
 #include "Edge.h"
 #include "Graph.h"
