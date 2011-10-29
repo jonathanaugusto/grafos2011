@@ -168,12 +168,15 @@ class Graph{
 			map<float,float> distances;
 			float medium = .0;
 
+			unsigned int num_threads = 0;
+			getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+
 			cout << "Running Dijkstra...";
 
 			boost::thread_group threads;
-			for (unsigned int i = 0; i < NUM_THREADS; i++){
+			for (unsigned int i = 0; i < MAX_THREADS; i++){
 				Graph g = *this;
-				boost::thread *thread = new boost::thread(boost::bind(&Graph::parallelDijkstra,g,(getNodesNumber()/NUM_THREADS)*i+1,(getNodesNumber()/NUM_THREADS)*(i+1),filename));
+				boost::thread *thread = new boost::thread(boost::bind(&Graph::parallelDijkstra,g,(getNodesNumber()/num_threads)*i+1,(getNodesNumber()/num_threads)*(i+1),filename));
 				threads.add_thread(thread);
 			}
 			threads.join_all();

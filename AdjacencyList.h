@@ -45,6 +45,13 @@ public:
 		return size()-1;
 	}
 
+	unsigned long getEdgesNumber(){
+		unsigned long edges = 0;
+		for (unsigned int i = 0; i < getNodesNumber(); i++)
+			edges += at(i).size();
+		return edges/2;
+	}
+
 	/**
 	 * @brief Test adjacency between two nodes using adjacency list.
 	 * @param	this	Adjacency list.
@@ -62,8 +69,76 @@ public:
 				return it->second;
 			}
 		return 0;
-
 	}
+
+	void parallelDijkstra (unsigned int first_node, unsigned int last_node, string filename){
+		for (unsigned int i = first_node; i <= last_node; i++){
+			dijkstra(i, filename);
+		}
+	}
+
+
+	/**
+	 * @brief Calculates and returns empirical
+	 * distribution for distances between node pairs.
+	 *
+	 */
+	pair<map<float,float>,float> getEmpiricalAndMedium(string filename){
+
+		map<float,float> distances;
+		float medium = .0;
+
+		unsigned int num_threads = 0;
+		getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+
+		cout << "Running Dijkstra...";
+
+		boost::thread_group threads;
+		for (unsigned int i = 0; i < num_threads; i++){
+			boost::thread *thread = new boost::thread(boost::bind(&AdjacencyList::parallelDijkstra,this,(getNodesNumber()/num_threads)*i+1,(getNodesNumber()/num_threads)*(i+1),filename));
+			threads.add_thread(thread);
+		}
+		threads.join_all();
+
+		cout << endl;
+
+		cout << "Retrieving Dijkstra files...";
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			stringstream ss;
+			string s;
+			ss << i;
+			s = ss.str();
+			ifstream file ("dijkl"+s+"_"+filename, ifstream::in);
+
+			unsigned int start, end;
+			float distance;
+			string path;
+
+			file >> start;
+			while (!file.eof()){
+				file >> end;
+				if (file.eof()) break;
+				file >> distance;
+				file >> path;
+				//	cout << end << " " << distance << " " << path << endl;
+				distances[distance]++;
+				medium += distance;
+			}
+			file.close();
+		}
+		cout << endl;
+
+		medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
+		medium /= 2;
+
+		for (unsigned int i = 0; i < distances.size(); i++){
+			distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
+		}
+
+		return make_pair(distances,medium);
+	}
+
+
 	void build(string filename){
 
 		cout << ":: CREATE ADJACENCY LIST ::" << endl;
@@ -81,7 +156,7 @@ public:
 
 		new (this) AdjacencyList (nodes_n);
 
-		cout << "Created " << nodes_n << " nodes in adjacency matrix" << endl;
+		cout << "Created " << nodes_n << " nodes in adjacency list" << endl;
 
 		edges_n = 0;
 		while (!file.eof()){
@@ -96,7 +171,7 @@ public:
 			edges_n++;
 		}
 
-		cout << "Created " << edges_n << " edges in adjacency matrix" << endl;
+		cout << "Created " << edges_n << " edges in adjacency list" << endl;
 
 		clock_t end = clock();
 
@@ -107,6 +182,35 @@ public:
 		operationsFile.close();
 
 		file.close();
+	}
+
+	void buildInformationFile2 (string filename){
+
+		ofstream file ("info2_"+filename, ofstream::out);
+		file << "# n = " << getNodesNumber() << endl;
+		file << "# m = " << getEdgesNumber() << endl;
+
+		//file << "# d_media = " << getMediumDistance() << endl;
+
+		float start = clock()/CLOCKS_PER_SEC;
+
+		pair<map<float,float>,float> pair = getEmpiricalAndMedium(filename);
+		file << "# d_med = " << pair.second << endl;
+
+		for (unsigned long i = 0; i < pair.first.size(); i++)
+			file << i << " " << pair.first[i] << endl;
+
+		float end = clock()/CLOCKS_PER_SEC;
+
+		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+		else operationsFile << "info2:" << filename << ":" << end - start << endl;
+		operationsFile.flush();
+		operationsFile.close();
+
+		file.flush();
+		file.close();
+
 	}
 
 
@@ -376,8 +480,7 @@ public:
 
 	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, unsigned long endingNode, string filename){
 
-		cout << ":: DIJKSTRA USING ADJACENCY LIST ::" << endl;
-		ofstream file ("dijkl_"+filename, ifstream::out);
+		//cout << ":: DIJKSTRA USING ADJACENCY LIST ::" << endl;
 
 		vector<float> distance (getNodesNumber()+1, numeric_limits<float>::infinity());
 
@@ -388,7 +491,6 @@ public:
 		}
 		distance[startingNode] = 0;
 		nodes.push_front (make_pair(startingNode,&distance[startingNode]));
-		file << "n: " << startingNode << "\troot" << endl;
 
 		vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
 		path[startingNode].push_back(startingNode);
@@ -398,7 +500,6 @@ public:
 		while (nodes.size() > 0){
 			pair<unsigned long,float*> node = *nodes.begin();
 			nodes.pop_front();
-			nodes.size()%500 == 0? cout << nodes.size() << " nodes remaining" << endl : cout << "";
 			for (set <pair <unsigned long, float> >::iterator it = at(node.first).begin(); it != at(node.first).end(); it++){
 					if (distance[it->first] > distance[node.first] + it->second){
 						distance[it->first] = distance[node.first] + it->second;
@@ -417,17 +518,24 @@ public:
 		operationsFile.flush();
 		operationsFile.close();
 
-		for (unsigned int i = 1; i <= getNodesNumber(); i++){
-			if ((path[i].size() > 0)&&(i != startingNode)){
-				file << "n: " << i <<"\tdist: " << distance[i] << "\tpath: " << path[i][0];
-				for (unsigned int j = 1; j < path[i].size(); ++j) {
-					file << "-" << path[i][j];
+		if (filename != "") {
+			stringstream ss; string s;
+			ss << startingNode; s = ss.str();
+			ofstream file ("dijkl"+s+"_"+filename, ofstream::out);
+			file << startingNode << endl;
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				if ((path[i].size() > 0)&&(i != startingNode)){
+					file << i << " " << distance[i] << " " << path[i][0];
+					for (unsigned int j = 1; j < path[i].size(); ++j) {
+						file << "-" << path[i][j];
+					}
+					file << endl;
 				}
-				file << endl;
 			}
+			file.flush();
+			file.close();
 		}
-		file.flush();
-		file.close();
+
 
 		return make_pair(distance[endingNode],path[endingNode]);
 	}

@@ -84,8 +84,7 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 
 		void parallelDijkstra (unsigned int first_node, unsigned int last_node, string filename){
 			for (unsigned int i = first_node; i <= last_node; i++){
-				AdjacencyMatrix m = *this;
-				m.dijkstra(i, filename);
+				dijkstra(i, filename);
 			}
 		}
 
@@ -100,11 +99,14 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			map<float,float> distances;
 			float medium = .0;
 
+			unsigned int num_threads = 0;
+			getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+
 			cout << "Running Dijkstra...";
 
 			boost::thread_group threads;
-			for (unsigned int i = 0; i < NUM_THREADS; i++){
-				boost::thread *thread = new boost::thread(boost::bind(&AdjacencyMatrix::parallelDijkstra,this,(getNodesNumber()/NUM_THREADS)*i+1,(getNodesNumber()/NUM_THREADS)*(i+1),filename));
+			for (unsigned int i = 0; i < num_threads; i++){
+				boost::thread *thread = new boost::thread(boost::bind(&AdjacencyMatrix::parallelDijkstra,this,(getNodesNumber()/num_threads)*i+1,(getNodesNumber()/num_threads)*(i+1),filename));
 				threads.add_thread(thread);
 			}
 			threads.join_all();

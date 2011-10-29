@@ -23,7 +23,7 @@
 								 # [b,d]fsA: bfs/dfs from structure A\n\
 								 # ccA: found connected components from structure A"
 #define OPERATIONSFILE_NAME "operations.txt"
-#define NUM_THREADS 2
+#define MAX_THREADS 150
 
 #include <iostream>
 #include <fstream>
