@@ -24,9 +24,10 @@ using namespace rel_ops;
 
 using namespace boost;
 using boost::thread;
+using boost::bind;
 using boost::thread_group;
 
-void pd (Graph, unsigned int, unsigned int, string);
+void parallelDijkstra (unsigned int, unsigned int, string);
 
 /**
  * @brief Abstraction of a graph.
@@ -132,6 +133,12 @@ class Graph{
 			return (m_distance / ((getNodesNumber()*(getNodesNumber()-1))/2));
 		}
 
+		Graph &operator= (Graph graph){
+			g_edges = graph.g_edges;
+			g_nodes = graph.g_nodes;
+			return *this;
+		}
+
 		/**
 		 * @brief Overload of relational operator.
 		 */
@@ -141,6 +148,15 @@ class Graph{
 				if (g_edges != graph.g_edges) return false;
 			return true;
 		}
+
+		void parallelDijkstra (unsigned int first_node, unsigned int last_node, string filename){
+			Graph g;
+			for (unsigned int i = first_node; i <= last_node; i++){
+				g = *this;
+				g.dijkstra(i, filename);
+			}
+		}
+
 
 		/**
 		 * @brief Calculates and returns empirical
@@ -155,9 +171,9 @@ class Graph{
 			cout << "Running Dijkstra...";
 
 			boost::thread_group threads;
-			for (unsigned int i = 0; i < 10; i++){
-				Graph graph = *this;
-				boost::thread *thread = new boost::thread(&pd,graph,(getNodesNumber()/NUM_THREADS)*i+1,(getNodesNumber()/NUM_THREADS)*(i+1),filename);
+			for (unsigned int i = 0; i < NUM_THREADS; i++){
+				Graph g = *this;
+				boost::thread *thread = new boost::thread(boost::bind(&Graph::parallelDijkstra,g,(getNodesNumber()/NUM_THREADS)*i+1,(getNodesNumber()/NUM_THREADS)*(i+1),filename));
 				threads.add_thread(thread);
 			}
 			threads.join_all();
@@ -195,9 +211,6 @@ class Graph{
 
 			for (unsigned int i = 0; i < distances.size(); i++){
 				distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
-			}
-			for (unsigned int i = 0; i < distances.size(); i++){
-				cout << i << " " << distances[i];
 			}
 
 			return make_pair(distances,medium);
@@ -530,32 +543,43 @@ class Graph{
 
 			//cout << ":: DIJKSTRA USING GRAPH ::" << endl;
 
+			static vector<float> distances (getNodesNumber()+1, numeric_limits<float>::infinity());
+
+			struct sortByDistance{
+				bool operator() (Node *node1, Node *node2){
+					if (distances[node1->label] < distances[node2->label]) return true;
+					else if (distances[node1->label] == distances[node2->label])
+						if (node1->label < node2->label) return true;
+						else return false;
+					else return false;
+				}
+			};
+
 			vector <vector<Node *> > path (g_nodes.size()+1, {});
 			list <Node *> nodes; // V-S
 
 			float start = clock()/CLOCKS_PER_SEC;
 
 			for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
-				g_nodes[i].distance = numeric_limits<float>::infinity();
 				nodes.push_back (&g_nodes[i]);
 			}
 
 			Node *starting = &g_nodes[startingNode];
-			starting->distance = 0;
+			distances[starting->label] = 0;
 			path[starting->label].push_back(starting);
 			while (nodes.size() > 0){
 				Node *node = *nodes.begin();
 				nodes.pop_front();
- 				for (set<Edge *>::iterator it=node->edges.begin(); it!=node->edges.end(); it++){
+				for (set<Edge *>::iterator it=node->edges.begin(); it!=node->edges.end(); it++){
 					Node *node2;
 					(**it).from->label == node->label? node2 = (**it).to : node2 = (**it).from;
-					if (node2->distance > node->distance + (**it).weight){
-						node2->distance = node->distance + (**it).weight;
+					if (distances[node2->label] > distances[node->label] + (**it).weight){
+						distances[node2->label] = distances[node->label] + (**it).weight;
 						path[node2->label] = path[node->label];
 						path[node2->label].push_back(node2);
 					}
 				}
-				nodes.sort(sortByDistance);
+				nodes.sort(sortByDistance());
 			}
 
 			float end = clock()/CLOCKS_PER_SEC;
@@ -572,9 +596,9 @@ class Graph{
 				ss << startingNode; s = ss.str();
 				ofstream file ("dijkg"+s+"_"+filename, ofstream::out);
 				file << startingNode << endl;
-				for (unsigned int i = 1; i < path.size(); i++){
+				for (unsigned int i = 1; i <= getNodesNumber(); i++){
 					if ((path[i].size() > 0)&&(i != startingNode)){
-						file << i << " " << g_nodes[i].distance << " " << path[i][0]->label;
+						file << i << " " << distances[i] << " " << path[i][0]->label;
 						for (unsigned int j = 1; j < path[i].size(); ++j) {
 							file << "-" << path[i][j]->label;
 						}
@@ -585,8 +609,9 @@ class Graph{
 				file.close();
 			}
 
-			return make_pair(g_nodes[endingNode].distance,path[endingNode]);
+			return make_pair(distances[endingNode],path[endingNode]);
 		}
+
 
 
 		pair<float, vector<Node *> > dijkstra(unsigned long startingNode, string filename){
@@ -714,12 +739,5 @@ class Graph{
 			}
 		}
 };
-
-
-void pd (Graph graph, unsigned int first_node, unsigned int last_node, string filename){
-		for (unsigned int i = first_node; i <= last_node; i++){
-			graph.dijkstra(i, filename);
-		}
-	}
 
 #endif

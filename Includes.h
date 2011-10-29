@@ -23,7 +23,7 @@
 								 # [b,d]fsA: bfs/dfs from structure A\n\
 								 # ccA: found connected components from structure A"
 #define OPERATIONSFILE_NAME "operations.txt"
-#define NUM_THREADS 10
+#define NUM_THREADS 2
 
 #include <iostream>
 #include <fstream>
@@ -44,9 +44,9 @@
 #include <utility>
 #include <ctime>
 #include <limits>
-#include <thread>
 
 #include <boost/thread/thread.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "Edge.h"
 #include "Graph.h"

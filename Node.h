@@ -133,14 +133,4 @@ bool sortByLabel (Node *node1, Node *node2){
 	return node1->label < node2->label;
 }
 
-bool sortByDistance (Node *node1, Node *node2){
-	if (node1->distance < node2->distance)
-		return true;
-	else if (node1->distance == node2->distance){
-		if (node1->label < node2->label) return true;
-		else return false;
-	}
-	return false;
-}
-
 #endif

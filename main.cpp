@@ -18,19 +18,19 @@ int main(int argc, char *argv[])
 	}
 	system ("cls");
 	cout << endl;
-	Graph graph;
-	graph.build(argv[1]);
+	AdjacencyMatrix adjm;
+	adjm.build(argv[1]);
 	/*for (set <Edge *>::iterator it = graph.g_nodes[1].edges.begin(); it != graph.g_nodes[1].edges.end(); it++)
 		cout << **it << endl;*/
 	//graph.getEmpiricalAndMedium();
 
-	graph.buildInformationFile2(argv[1]);
+	adjm.buildInformationFile2(argv[1]);
 	//graph.convertToMatrix().dijkstra(1,argv[1]);
 
 	cout << "All done! :D" << endl;
 
 	system ("pause");
-	system ("cls");
+	//system ("cls");
 	cout << endl;
 
     return 0;
