@@ -77,7 +77,8 @@ int main(int argc, char *argv[])
 			g.prim(startingNode,argv[1]);
 			break;
 		case 'I':
-			g.buildInformationFile2(argv[1]);
+			//g.buildInformationFile2(argv[1]);
+			cout << "Not working :(" << endl;
 			break;
 		default:
 			break;
