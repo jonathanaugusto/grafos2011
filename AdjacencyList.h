@@ -656,7 +656,6 @@ public:
 			if ((nodeFlag[edge.first.first] xor nodeFlag[edge.first.second])){
 				adjl.setAdjacency (edge.first.first, edge.first.second, edge.second);
 				edges_n++;
-				cout << "Peguei " << edge.first.first << "-" <<  edge.first.second << endl;
 			}
 			// Go over border through this edge.
 			// If that node is marked, it's already inside.
@@ -673,12 +672,10 @@ public:
 						if ((i < node2) && (edgeFlag [make_pair(i,node2)] == false)){
 							edgeFlag [make_pair(i,node2)] = true;
 							cut.insert (make_pair(make_pair(i,node2),getAdjacency(i,node2)));
-							cout << "Coloquei " << i << "-" << node2 << endl;
 						}
 						else if ((i > node2) && (edgeFlag [make_pair(node2,i)] == false)){
 							edgeFlag [make_pair(node2,i)] = true;
 							cut.insert (make_pair(make_pair(node2,i),getAdjacency(node2,i)));
-							cout << "Coloquei " << i << "-" << node2 << endl;
 						}
 					}
 				}

@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
 	unsigned long endingNode;
 	bool hasEnding = false;
 	if (operation == 'D'){
-		cout << "Select an ending node: ";
+		cout << "Select an ending node or type Enter: ";
 		cin >> endingNode;
-		hasEnding = true;
+		if (endingNode != NULL) hasEnding = true;
 	}
 	cout << endl;
 
