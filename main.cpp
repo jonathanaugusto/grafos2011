@@ -120,8 +120,7 @@ int main(int argc, char *argv[])
 			else l.path(startingNode,argv[1]);
 			break;
 		case 'M':
-			//l.prim(startingNode,argv[1]);
-			cout << "Not made yet =( \n";
+			l.prim(startingNode,argv[1]);
 			break;
 		case 'I':
 			l.buildInformationFile2(argv[1]);
