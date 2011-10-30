@@ -32,6 +32,7 @@ class AdjacencyList : public vector< set <pair <unsigned long, float> > > {
 public:
 
 	bitset<2> weighted; // [0] to weighted graph; [1] to a negative weight
+	unsigned long edges;
 
 	AdjacencyList(){
 		new (this) vector< set <pair <unsigned long, float> > > ( 0, set < pair <unsigned long, float> >());
@@ -46,10 +47,7 @@ public:
 	}
 
 	unsigned long getEdgesNumber(){
-		unsigned long edges = 0;
-		for (unsigned int i = 0; i < getNodesNumber(); i++)
-			edges += at(i).size();
-		return edges/2;
+		return edges;
 	}
 
 	/**
@@ -77,7 +75,6 @@ public:
 		}
 	}
 
-
 	/**
 	 * @brief Calculates and returns empirical
 	 * distribution for distances between node pairs.
@@ -88,10 +85,17 @@ public:
 		map<float,float> distances;
 		float medium = .0;
 
-		unsigned int num_threads = 0;
-		getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+		/*cout << "Running Dijkstra...";
+		for (unsigned int i = 1; i <= getNodesNumber(); i++){
+			dijkstra(i, filename);
+		}
+		cout << endl;*/
 
-		cout << "Running Dijkstra...";
+		unsigned int num_threads = 0;
+		if(getNodesNumber() > MAX_THREADS) num_threads = MAX_THREADS - getNodesNumber()%MAX_THREADS;
+		else num_threads = getNodesNumber();
+
+		cout << "Running Dijkstra with " << num_threads << " threads.";
 
 		boost::thread_group threads;
 		for (unsigned int i = 0; i < num_threads; i++){
@@ -100,9 +104,9 @@ public:
 		}
 		threads.join_all();
 
-		cout << endl;
+		cout << " Done!" << endl;
 
-		cout << "Retrieving Dijkstra files...";
+		cout << "Retrieving Dijkstra files.";
 		for (unsigned int i = 1; i <= getNodesNumber(); i++){
 			stringstream ss;
 			string s;
@@ -125,8 +129,10 @@ public:
 				medium += distance;
 			}
 			file.close();
+			cout << ".";
 		}
-		cout << endl;
+
+		cout << " Done!" << endl;
 
 		medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
 		medium /= 2;
@@ -171,7 +177,9 @@ public:
 			edges_n++;
 		}
 
+		edges = edges_n;
 		cout << "Created " << edges_n << " edges in adjacency list" << endl;
+
 
 		clock_t end = clock();
 
@@ -483,16 +491,24 @@ public:
 		//cout << ":: DIJKSTRA USING ADJACENCY LIST ::" << endl;
 
 		vector<float> distance (getNodesNumber()+1, numeric_limits<float>::infinity());
-
 		list <pair<unsigned long,float*> > nodes; // V-S
+		vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+
+		if (filename != "") {
+				stringstream ss; string s;
+				ss << startingNode; s = ss.str();
+				ifstream file ("dijkl"+s+"_"+filename);
+				if (file) {
+					file.close();
+					return make_pair(distance[endingNode],path[endingNode]);
+				}
+		}
 
 		for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
 			if (i != startingNode) nodes.push_back(make_pair(i,&distance[i]));
 		}
 		distance[startingNode] = 0;
 		nodes.push_front (make_pair(startingNode,&distance[startingNode]));
-
-		vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
 		path[startingNode].push_back(startingNode);
 
 		float start = clock()/CLOCKS_PER_SEC;
@@ -536,12 +552,12 @@ public:
 			file.close();
 		}
 
-
 		return make_pair(distance[endingNode],path[endingNode]);
 	}
 
 	pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, string filename){
 		// For all nodes
+		cout << ".";
 		return dijkstra(startingNode, 0, filename);
 	}
 

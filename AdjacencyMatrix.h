@@ -99,10 +99,17 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			map<float,float> distances;
 			float medium = .0;
 
-			unsigned int num_threads = 0;
-			getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+			/*cout << "Running Dijkstra...";
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				dijkstra(i, filename);
+			}
+			cout << endl;*/
 
-			cout << "Running Dijkstra...";
+			unsigned int num_threads = 0;
+			if(getNodesNumber() > MAX_THREADS) num_threads = MAX_THREADS - getNodesNumber()%MAX_THREADS;
+			else num_threads = getNodesNumber();
+
+			cout << "Running Dijkstra with " << num_threads << " threads.";
 
 			boost::thread_group threads;
 			for (unsigned int i = 0; i < num_threads; i++){
@@ -111,9 +118,9 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			}
 			threads.join_all();
 
-			cout << endl;
+			cout << " Done!" << endl;
 
-			cout << "Retrieving Dijkstra files...";
+			cout << "Retrieving Dijkstra files.";
 			for (unsigned int i = 1; i <= getNodesNumber(); i++){
 				stringstream ss;
 				string s;
@@ -136,8 +143,10 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 					medium += distance;
 				}
 				file.close();
+				cout << ".";
 			}
-			cout << endl;
+
+			cout << " Done!" << endl;
 
 			medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
 			medium /= 2;
@@ -186,8 +195,8 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 				setAdjacency(node1,node2,weight);
 				edges_n++;
 			}
-			edges = edges_n;
 
+			edges = edges_n;
 			cout << "Created " << edges_n << " edges in adjacency matrix" << endl;
 
 			clock_t end = clock();
@@ -439,8 +448,18 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			//cout << ":: DIJKSTRA USING ADJACENCY MATRIX ::" << endl;
 
 			vector<float> distance (getNodesNumber()+1, numeric_limits<float>::infinity());
-
 			list <pair<unsigned long,float*> > nodes; // V-S
+			vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
+
+			if (filename != "") {
+					stringstream ss; string s;
+					ss << startingNode; s = ss.str();
+					ifstream file ("dijkm"+s+"_"+filename);
+					if (file) {
+						file.close();
+						return make_pair(distance[endingNode],path[endingNode]);
+					}
+			}
 
 			for (unsigned int i = 1; i <= getNodesNumber(); ++i) {
 				if (i != startingNode) nodes.push_back(make_pair(i,&distance[i]));
@@ -448,7 +467,6 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 			distance[startingNode] = 0;
 			nodes.push_front (make_pair(startingNode,&distance[startingNode]));
 
-			vector <vector<unsigned long> > path (getNodesNumber()+1, vector <unsigned long>(0));
 			path[startingNode].push_back(startingNode);
 
 			float start = clock()/CLOCKS_PER_SEC;
@@ -499,6 +517,7 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 
 		pair<float,vector<unsigned long> > dijkstra(unsigned long startingNode, string filename){
 			// For all nodes
+			cout << ".";
 			return dijkstra(startingNode, 0, filename);
 		}
 
@@ -529,6 +548,133 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 				return dijkstra (startingNode, endingNode); // weighted graph: Dijkstra algorithm
 			else cout << "Weighted graph, but negative weights"; // we can't do anything
 			return {};
+		}
+
+		struct compareEdges{
+			bool operator() (pair< pair<unsigned long, unsigned long>,float> p1, pair< pair<unsigned long, unsigned long>,float> p2){
+				if (p1.second < p2.second) return true;
+				else if (p1.second == p2.second)
+					if (p1.first < p2.first) return true;
+					else return false;
+				else return false;
+			}
+		};
+
+		void prim (unsigned long startingNode, string filename){
+
+			cout << ":: PRIM USING ADJACENCY MATRIX ::" << endl;
+
+			float start = clock()/CLOCKS_PER_SEC;
+
+			// New AdjacencyMatrix represents set of edges and nodes already verified.
+			AdjacencyMatrix adjm (getNodesNumber());
+
+			for (unsigned int i = 1; i <= getNodesNumber(); i++)
+				for (unsigned int j = i+1; j <= getNodesNumber()-1; j++)
+					adjm.setAdjacency (i,j,0);
+
+			// Set represents border edges (sorted by weight)
+			// pair <unsigned long, unsigned long> represents nodes (first < second);
+			// float represents edge weight.
+			set <pair< pair<unsigned long, unsigned long> ,float>,AdjacencyMatrix::compareEdges> cut;
+
+			// Initialization: all node costs are infinity, and all edges and nodes are unmarked.
+			vector<float> distance (getNodesNumber()+1, numeric_limits<float>::infinity());
+			map<pair<unsigned long, unsigned long>,bool> edgeFlag;
+			vector<bool> nodeFlag (getNodesNumber()+1, false);
+
+			// Initialization: starting node is marked, and all its edges are added to border.
+			nodeFlag[startingNode] = true;
+			for (unsigned int i = 1; i <= getNodesNumber(); i++) {
+				float w = getAdjacency(startingNode,i);
+				if (w != 0){
+					if (i < startingNode){
+						edgeFlag [make_pair(i,startingNode)] = true;
+						cut.insert (make_pair(make_pair(i,startingNode),w));
+					}
+					else{
+						edgeFlag [make_pair(startingNode,i)] = true;
+						cut.insert (make_pair(make_pair(startingNode,i),w));
+					}
+				}
+			}
+
+			unsigned long nodes_n = 1;
+			unsigned long edges_n = 0;
+
+			while (nodes_n <= getNodesNumber()){
+
+				// Catch lightest border edge (first at ordered set)
+				pair< pair<unsigned long, unsigned long> ,float> edge = *cut.begin();
+				cut.erase(cut.begin());
+
+				// If it's still a border edge, add it at adjacency matrix
+				if ((nodeFlag[edge.first.first] xor nodeFlag[edge.first.second])){
+					adjm.setAdjacency (edge.first.first, edge.first.second, edge.second);
+					edges_n++;
+					cout << "Peguei " << edge.first.first << "-" <<  edge.first.second << endl;
+				}
+				// Go over border through this edge.
+				// If that node is marked, it's already inside.
+				unsigned long node2;
+				nodeFlag[edge.first.second] == true? node2 = edge.first.first : node2 = edge.first.second ;
+
+				if ((nodeFlag[node2] == false) && (distance[node2] > edge.second)){
+					nodeFlag[node2] = true;
+					distance[node2] = edge.second;
+					nodes_n++;
+
+					for (unsigned int i = 1; i <= getNodesNumber(); i++) {
+						if (getAdjacency(node2,i) != 0){
+							if ((i < node2) && (edgeFlag [make_pair(i,node2)] == false)){
+								edgeFlag [make_pair(i,node2)] = true;
+								cut.insert (make_pair(make_pair(i,node2),getAdjacency(i,node2)));
+								cout << "Coloquei " << i << "-" << node2 << endl;
+							}
+							else if ((i > node2) && (edgeFlag [make_pair(node2,i)] == false)){
+								edgeFlag [make_pair(node2,i)] = true;
+								cut.insert (make_pair(make_pair(node2,i),getAdjacency(node2,i)));
+								cout << "Coloquei " << i << "-" << node2 << endl;
+							}
+						}
+					}
+				}
+
+				cout << "cut = ";
+				for (set <pair< pair<unsigned long, unsigned long> ,float> >::iterator it = cut.begin(); it != cut.end(); it++)
+					cout << it->first.first << "-" << it->first.second << "(" << it->second << ") | ";
+				cout << endl;
+
+				if (nodes_n == getNodesNumber()) break;
+			}
+			adjm.edges = edges_n;
+
+			float end = clock()/CLOCKS_PER_SEC;
+			ofstream operationsFile (OPERATIONSFILE_NAME, ofstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "primG:" << filename << ":" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			float total = .0;
+			for (unsigned int i = 1; i <= adjm.getNodesNumber()-1; i++)
+				for (unsigned int j = i+1; j <= adjm.getNodesNumber(); j++)
+					total += adjm.getAdjacency(i,j);
+
+			cout << "MST weight: " << total << endl;
+			cout << "Edges: " << adjm.getEdgesNumber() << endl;
+
+			if (filename != "") {
+				ofstream file ("primm_"+filename, ofstream::out);
+				file << total << endl;
+				for (unsigned int i = 1; i <= adjm.getNodesNumber()-1; i++)
+						for (unsigned int j = i+1; j <= adjm.getNodesNumber(); j++)
+							if (adjm.getAdjacency(i,j) != 0)
+						file << i << " " << j << " " << adjm.getAdjacency(i,j) << endl;
+				file.flush();
+				file.close();
+			}
+
 		}
 
 	};

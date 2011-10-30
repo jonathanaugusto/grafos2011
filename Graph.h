@@ -168,10 +168,17 @@ class Graph{
 			map<float,float> distances;
 			float medium = .0;
 
-			unsigned int num_threads = 0;
-			getNodesNumber() > MAX_THREADS ? num_threads = MAX_THREADS : num_threads = getNodesNumber() - num_threads%getNodesNumber();
+			/*cout << "Running Dijkstra...";
+			for (unsigned int i = 1; i <= getNodesNumber(); i++){
+				dijkstra(i, filename);
+			}
+			cout << endl;*/
 
-			cout << "Running Dijkstra...";
+			unsigned int num_threads = 0;
+			if(getNodesNumber() > MAX_THREADS) num_threads = MAX_THREADS - getNodesNumber()%MAX_THREADS;
+			else num_threads = getNodesNumber();
+
+			cout << "Running Dijkstra with " << num_threads << " threads.";
 
 			boost::thread_group threads;
 			for (unsigned int i = 0; i < MAX_THREADS; i++){
@@ -181,9 +188,9 @@ class Graph{
 			}
 			threads.join_all();
 
-			cout << endl;
+			cout << " Done!" << endl;
 
-			cout << "Retrieving Dijkstra files...";
+			cout << "Retrieving Dijkstra files.";
 			for (unsigned int i = 1; i <= getNodesNumber(); i++){
 				stringstream ss;
 				string s;
@@ -206,8 +213,10 @@ class Graph{
 					medium += distance;
 				}
 				file.close();
+				cout << ".";
 			}
-			cout << endl;
+
+			cout << " Done!" << endl;
 
 			medium /= (getNodesNumber()*(getNodesNumber()-1)/2);
 			medium /= 2;
@@ -546,7 +555,10 @@ class Graph{
 
 			//cout << ":: DIJKSTRA USING GRAPH ::" << endl;
 
+
 			static vector<float> distances (getNodesNumber()+1, numeric_limits<float>::infinity());
+			vector <vector<Node *> > path (g_nodes.size()+1, {});
+			list <Node *> nodes; // V-S
 
 			struct sortByDistance{
 				bool operator() (Node *node1, Node *node2){
@@ -558,8 +570,15 @@ class Graph{
 				}
 			};
 
-			vector <vector<Node *> > path (g_nodes.size()+1, {});
-			list <Node *> nodes; // V-S
+			if (filename != "") {
+					stringstream ss; string s;
+					ss << startingNode; s = ss.str();
+					ifstream file ("dijkg"+s+"_"+filename);
+					if (file) {
+						file.close();
+						return make_pair(distances[endingNode],path[endingNode]);
+					}
+			}
 
 			float start = clock()/CLOCKS_PER_SEC;
 
@@ -619,6 +638,7 @@ class Graph{
 
 		pair<float, vector<Node *> > dijkstra(unsigned long startingNode, string filename){
 			// For all nodes
+			cout << ".";
 			return dijkstra(startingNode, 0, filename);
 		}
 
@@ -678,6 +698,7 @@ class Graph{
 			starting->flag();
 			for (set <Edge *>::iterator it = starting->edges.begin(); it != starting->edges.end(); it++) {
 				Edge *edge = *it;
+				edge->flag();
 				cut.insert(edge);
 			}
 
@@ -698,7 +719,7 @@ class Graph{
 				Node* node2;
 				edge->to->test() == true? node2 = edge->from : node2 = edge->to ;
 
-				if ((node2->test() == false)&&(node2->distance > edge->weight)){
+				if (node2->distance > edge->weight){
 					node2->flag();
 					node2->distance = edge->weight;
 					nodes_n++;
