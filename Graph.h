@@ -287,7 +287,7 @@ class Graph{
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "buildFG:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << endl;
+			else operationsFile << "buildFG:" << filename << ":" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << endl;
 			operationsFile.flush();
 			operationsFile.close();
 

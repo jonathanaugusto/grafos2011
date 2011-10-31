@@ -190,7 +190,7 @@ public:
 
 		ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 		if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-		else operationsFile << "buildFL:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
+		else operationsFile << "buildFL:" << filename << ":" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
 		operationsFile.flush();
 		operationsFile.close();
 

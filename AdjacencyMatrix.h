@@ -204,7 +204,7 @@ class AdjacencyMatrix : public std::vector< vector<float> > {
 
 			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
 			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
-			else operationsFile << "buildFM:" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
+			else operationsFile << "buildFM:" << filename << ":" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << size()*sizeof(unsigned long) << endl;
 			operationsFile.flush();
 			operationsFile.close();
 

@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
 	switch (structure) {
 	case 'O':
 		g.build(argv[1]);
-		cout << endl;
 		switch (operation){
 		case 'D':
 			if (hasEnding == true){
