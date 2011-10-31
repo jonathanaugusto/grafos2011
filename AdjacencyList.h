@@ -143,6 +143,7 @@ public:
 
 		for (unsigned int i = 0; i < distances.size(); i++){
 			distances[i] /= (getNodesNumber()*(getNodesNumber()-1)/2);
+			distances[i] /= 2;
 		}
 
 		return make_pair(distances,medium);
