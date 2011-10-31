@@ -77,8 +77,8 @@ int main(int argc, char *argv[])
 			g.prim(startingNode,argv[1]);
 			break;
 		case 'I':
-			//g.buildInformationFile2(argv[1]);
-			cout << "Not working :(" << endl;
+			cout << "Not paralelized :(" << endl;
+			g.buildInformationFile2(argv[1]);
 			break;
 		default:
 			break;
@@ -133,7 +133,6 @@ int main(int argc, char *argv[])
 	default:
 		break;
 	}
-
 	cout << endl;
 	cout << "All done! :D" << endl;
 
