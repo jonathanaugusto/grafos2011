@@ -826,9 +826,9 @@ class Graph{
 				cut.insert(edge);
 			}
 
-			unsigned long nodes_n = 0;
+			unsigned long nodes_n = 1;
 
-			while (nodes_n <= getNodesNumber()){
+			while (graph.g_edges.size() < g_nodes.size()-2){
 
 				// Catch lightest border edge (first at ordered set)
 				Edge *edge = *(cut.begin());
@@ -861,7 +861,6 @@ class Graph{
 						}
 					}
 				}
-				if (nodes_n >= getNodesNumber()) break;
 			}
 
 
@@ -910,7 +909,6 @@ class Graph{
 			for (unsigned int i = 0; i < path.size()-1; i++){
 				for (set<Edge *>::iterator it = g_nodes[path[i]->label].edges.begin(); it != g_nodes[path[i]->label].edges.end(); it++)
 					if (((*it)->to->label == path[i+1]->label)||((*it)->from->label == path[i+1]->label)) edge = **it;
-				cout << edge << endl;
 				cost += edge.weight + .0;
 			}
 			cout << "Cost: " << cost << endl;
@@ -921,6 +919,8 @@ class Graph{
 					file << path[i]->label << " ";
 				file << path[path.size()-1]->label;
 				file << endl << endl << cost << endl;
+				file.flush();
+				file.close();
 			}
 
 			return make_pair(cost, path);

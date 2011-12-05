@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
 	char operation;
 	do{
-		cout << "Choose an operation:\n[D]istance and minimum path\n[M]ST\n[I]nformation file w/ mean distance and empirical distribution\nSolve [T]SP-problem\nOperation: ";
+		cout << "Choose an operation:\n[D]istance and minimum path\n[M]ST\n[I]nformation file w/ mean distance and empirical distribution\n[T]SP-problem approximative algorithm\nOperation: ";
 		cin >> operation;
 		operation = toupper(operation);
 		if ( (operation != 'D') && (operation != 'M') && (operation != 'I') && (operation != 'T') )
