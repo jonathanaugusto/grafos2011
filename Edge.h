@@ -67,6 +67,18 @@ class Edge{
 		 * @brief Constructor for class Edge.
 		 * @param	fromNode	Pointer to edge that connects from.
 		 * 			toNode		Pointer to edge that connects to.
+		 */
+		Edge(Node *fromNode, Node *toNode){
+
+			weight = 1;
+			isDirected = false;
+			this->addNodes(fromNode, toNode);
+		}
+
+		/**
+		 * @brief Constructor for class Edge.
+		 * @param	fromNode	Pointer to edge that connects from.
+		 * 			toNode		Pointer to edge that connects to.
 		 * 			edgeWeight	Value of edge weight.
 		 * 			isDir		Flag for (un)directed edge.
 		 */
@@ -81,10 +93,10 @@ class Edge{
 		 * @brief Overload of relational operators.
 		 */
 		bool operator== (Edge edge) const{
-			return ((from == edge.from) && (to == edge.to) && (weight == edge.weight));
+			return ((((from == edge.from) && (to == edge.to))||(from == edge.to) && (to == edge.from)) && (isDirected == false) && (edge.isDirected == false));
 		}
 		bool operator== (Edge *edge) const{
-			return ((from == edge->from) && (to == edge->to) && (weight == edge->weight));
+			return ((((from == edge->from) && (to == edge->to))||(from == edge->to) && (to == edge->from)) && (isDirected == false) && (edge->isDirected == false));
 		}
 
 		/**
@@ -194,18 +206,16 @@ list<Node *> Node::getConnectedNodes(){
 		else
 			connected.push_back(&*(*(*it)).from);
 	}
-	connected.sort(sortByLabel);
 
 	return connected;
-}
+};
 
 
 bool sortByWeight (const Edge *edge1, const Edge *edge2){
 		 if (*edge1 < *edge2)
 			 return true;
 		 return false;
-	}
-
+};
 
 
 

@@ -239,7 +239,7 @@ public:
 
 		cout << ":: BFS USING ADJACENCY LIST ::" << endl;
 		ofstream file ("bfsl_"+filename, ifstream::out);
-		ofstream file2 ("majorlevel", ifstream::app);
+		ofstream file2 ("majorlevel.txt", ifstream::app);
 		queue<pair<unsigned long, float>> searchQueue;
 		unsigned long set[this->size()+1][3]; // [0] to dad node; [1] to node level; [2] to flag
 		std::set <unsigned long> connected;

@@ -19,9 +19,20 @@ int main(int argc, char *argv[])
 	system ("cls");
 	cout << endl;
 
+	char tsp;
+	do{
+		cout << "Is it a TSP-graph (node positions instead of incident nodes)? [Y|N]";
+		cin >> tsp;
+		tsp = toupper(tsp);
+		if ( (tsp != 'N') && (tsp != 'Y') )
+			cout << "Invalid\n";
+	}while ( (tsp != 'N') && (tsp != 'Y') );
+	cout << endl;
+
 	char structure;
 	do{
-		cout << "Choose a data structure for the graph:\n[O]bject-oriented\nAdjacency-[M]atrix\nAdjacency-[L]ist\nData structure: ";
+		if (tsp == 'Y') cout << "Choose a data structure for the graph:\n[O]bject-oriented (only option available): ";
+		else cout << "Choose a data structure for the graph:\n[O]bject-oriented\nAdjacency-[M]atrix\nAdjacency-[L]ist\nData structure: ";
 		cin >> structure;
 		structure = toupper(structure);
 		if ( (structure != 'O') && (structure != 'M') && (structure != 'L') )
@@ -31,12 +42,12 @@ int main(int argc, char *argv[])
 
 	char operation;
 	do{
-		cout << "Choose an operation:\n[D]istance and minimum path\n[M]ST\n[I]nformation file w/ mean distance and empirical distribution\nOperation: ";
+		cout << "Choose an operation:\n[D]istance and minimum path\n[M]ST\n[I]nformation file w/ mean distance and empirical distribution\nSolve [T]SP-problem\nOperation: ";
 		cin >> operation;
 		operation = toupper(operation);
-		if ( (operation != 'D') && (operation != 'M') && (operation != 'I') )
+		if ( (operation != 'D') && (operation != 'M') && (operation != 'I') && (operation != 'T') )
 			cout << "Invalid\n";
-	}while ( (operation != 'D') && (operation != 'M') && (operation != 'I') );
+	}while ( (operation != 'D') && (operation != 'M') && (operation != 'I') && (operation != 'T') );
 	cout << endl;
 
 	unsigned long startingNode;
@@ -61,7 +72,8 @@ int main(int argc, char *argv[])
 
 	switch (structure) {
 	case 'O':
-		g.build(argv[1]);
+		if (tsp == 'Y') g.buildTSP(argv[1]);
+		else g.build(argv[1]);
 		switch (operation){
 		case 'D':
 			if (hasEnding == true){
@@ -78,6 +90,9 @@ int main(int argc, char *argv[])
 		case 'I':
 			cout << "Not paralelized :(" << endl;
 			g.buildInformationFile2(argv[1]);
+			break;
+		case 'T':
+			g.solveTSP(argv[1]);
 			break;
 		default:
 			break;

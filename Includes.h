@@ -44,6 +44,7 @@
 #include <utility>
 #include <ctime>
 #include <limits>
+#include <cmath>
 
 #include <boost/thread/thread.hpp>
 #include <boost/bind/bind.hpp>

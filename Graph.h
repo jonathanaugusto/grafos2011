@@ -60,16 +60,14 @@ class Graph{
 	 	 */
 		Graph (unsigned long nodes_n){
 			g_nodes.reserve(nodes_n+1);
-		}
 
-		/**
-	 	 * @brief Constructor of a graph reserving
-	 	 * space for a given numbers of edges and of nodes.
-	 	 * @param	nodes_n	Number of nodes.
-	 	 * @param	edges_n	Number of edges.
-	 	 */
-		Graph (unsigned long nodes_n, unsigned long edges_n){
-			g_nodes.reserve(nodes_n+1);
+			Node node0(0);
+			g_nodes.push_back(node0); // g_nodes[0] empty
+
+			for (unsigned long i = 1; i <= nodes_n; i++){
+				Node node(i);
+				g_nodes.push_back(node);
+			}
 		}
 
 		/**
@@ -252,13 +250,6 @@ class Graph{
 
 			cout << "File: " << filename << endl;
 
-			Node node0(0);
-			g_nodes.push_back(node0); // g_nodes[0] empty
-
-			for (unsigned long i = 1; i <= nodes_n; i++){
-				Node node(i);
-				g_nodes.push_back(node);
-			}
 			cout << "Created " << getNodesNumber() << " nodes in graph" << endl;
 
 			edges_n = 0;
@@ -276,8 +267,75 @@ class Graph{
 
 				//g_nodes[node1_n].addEdge(edge);
 				//g_nodes[node2_n].addEdge(edge);
-
 				g_edges.insert(*edge);
+
+				edges_n++;
+			}
+
+			cout << "Created " << getEdgesNumber() << " edges in graph" << endl;
+
+			clock_t end = clock();
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "buildFG:" << filename << ":" << (float)((end - start)/CLOCKS_PER_SEC) << ":" << g_edges.size()*sizeof(Edge)+g_nodes.size()*sizeof(Edge) << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			file.close();
+		}
+
+
+		/**
+		 * @brief Build graph from description file
+		 * (Line with number of nodes and then each line
+		 * with an edge)
+		 * @param filename	String containing filename.
+		 */
+		void buildTSP(string filename){
+
+			cout << ":: CREATE GRAPH ::" << endl;
+
+			unsigned long nodes_n, edges_n, node_x, node_y;
+
+			ifstream file (filename, ifstream::in);
+			if (file.fail()) cout << "Read error :(" << endl;
+
+			clock_t start = clock();
+
+			cout << "File: " << filename << endl;
+
+			file >> nodes_n;
+			int positions[nodes_n+1][2];
+
+			Node node0(0);
+			g_nodes.push_back(node0); // g_nodes[0] empty
+
+			for (unsigned long i = 1; i <= nodes_n; i++){
+				Node node(i);
+				g_nodes.push_back(node);
+			}
+			cout << "Created " << getNodesNumber() << " nodes in graph" << endl;
+
+			edges_n = 0;
+			for (unsigned int i = 1; !file.eof(); i++){
+				file >> node_x;
+				if (file.eof()) break;
+				file >> node_y;
+				positions[i][0] = node_x;
+				positions[i][1] = node_y;
+
+				for (unsigned int j = 1; j < i; j++) {
+					Edge *edge = (Edge *) malloc (sizeof(Edge));
+					edge->weight = sqrt (((node_x - positions[j][0])*(node_x - positions[j][0])) + ((node_y - positions[j][1])*(node_y - positions[j][1])));
+					edge->isDirected = false;
+					edge->addNodes(&g_nodes[i], &g_nodes[j]);
+					g_edges.insert(*edge);
+				}
+
+				//g_nodes[node1_n].addEdge(edge);
+				//g_nodes[node2_n].addEdge(edge);
+
 				edges_n++;
 			}
 
@@ -421,7 +479,7 @@ class Graph{
 			cout << ":: BFS USING GRAPH ::" << endl;
 			ofstream file ("bfsg_"+filename, ofstream::out);
 
-			queue<Node *> searchStack;
+			queue<Node *> searchQueue;
 			Node* dadNode[g_nodes.size()+1];
 			vector<long> nodeLevels (g_nodes.size()+1, -1);
 			std::set<Node *> connected;
@@ -435,21 +493,21 @@ class Graph{
 			cout << "Starting node: " << startingNode << endl;
 
 			nodeLevels[startingNode] = 0;
-			searchStack.push(&g_nodes[startingNode]);
+			searchQueue.push(&g_nodes[startingNode]);
 			g_nodes[startingNode].flag();
 
 			file << "n: " << startingNode << "\troot\tlevel: " << nodeLevels[startingNode] << endl;
 
-			while (!searchStack.empty()){
-				Node *node = searchStack.front();
-				searchStack.pop();
+			while (!searchQueue.empty()){
+				Node *node = searchQueue.front();
+				searchQueue.pop();
 				connected.insert(node);
 				list <Node *> connectedNodes = node->getConnectedNodes();
 				for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
 					Node *node2 = *it;
 					if (node2->test() == false){
 						node2->flag();
-						searchStack.push(node2);
+						searchQueue.push(node2);
 						dadNode[node2->label] = node;
 						nodeLevels[node2->label] = nodeLevels[node->label] + 1;
 					}
@@ -478,6 +536,72 @@ class Graph{
 			return connected;
 
 		}
+
+		vector<Node *> dfs(unsigned long startingNode,  string filename){
+
+			cout << ":: DFS USING GRAPH ::" << endl;
+
+			stack<Node *> searchStack;
+			Node* dadNode[g_nodes.size()+1];
+			vector<long> nodeLevels (g_nodes.size()+1, -1);
+			vector<Node *> connected;
+
+			float start = clock()/CLOCKS_PER_SEC;
+
+			for (unsigned long i = 0; i < this->g_nodes.size(); i++){
+				nodeLevels[i] = 0;
+			}
+
+			cout << "Starting node: " << startingNode << endl;
+
+			nodeLevels[startingNode] = 0;
+			searchStack.push(&g_nodes[startingNode]);
+
+			while (!searchStack.empty()){
+				Node *node = searchStack.top();
+				searchStack.pop();
+				connected.push_back(node);
+				if (node->test() == false){
+					node->flag();
+					list <Node *> connectedNodes = node->getConnectedNodes();
+					for (list<Node *>::iterator it=connectedNodes.begin(); it!=connectedNodes.end(); it++){
+						Node *node2 = *it;
+						if (node2->test() == false){
+							searchStack.push(node2);
+							dadNode[node2->label] = node;
+							nodeLevels[node2->label] = nodeLevels[node->label] + 1;
+						}
+					}
+				}
+			}
+			float end = clock()/CLOCKS_PER_SEC;
+
+			ofstream operationsFile (OPERATIONSFILE_NAME, ifstream::app);
+			if (operationsFile.fail()) cout << "Error writing function infos :(" << endl;
+			else operationsFile << "dfsG:" << end - start << endl;
+			operationsFile.flush();
+			operationsFile.close();
+
+			if (filename != "") {
+				ofstream file ("dfsg_"+filename, ofstream::out);
+				file << "n: " << startingNode << "\troot\tlevel: " << nodeLevels[startingNode] << endl;
+				for (unsigned int i = 1; i < g_nodes.size(); i++)
+					if (nodeLevels[i] > 0)
+						file << "n: " << i <<"\tdad: " << dadNode[i]->label <<  "\tlevel: " << nodeLevels[i] << endl;
+
+				file.flush();
+				file.close();
+
+				for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
+					g_nodes[i].unflag();
+				}
+			}
+
+			return connected;
+
+		}
+
+
 
 		vector<Node *> nonWeightedPath(unsigned long startingNode, unsigned long endingNode, string filename){
 
@@ -672,7 +796,7 @@ class Graph{
 			return {};
 		}
 
-		void prim (unsigned long startingNode, string filename){
+		Graph prim (unsigned long startingNode, string filename){
 
 			cout << ":: PRIM USING GRAPH ::" << endl;
 
@@ -680,7 +804,6 @@ class Graph{
 
 			// New Graph object represents set of edges and nodes already verified.
 			Graph graph(getNodesNumber());
-			graph.g_nodes.reserve(getNodesNumber());
 
 			// Set represents border edges (sorted by weight)
 			set<Edge *,Edge::comparePointers> cut;
@@ -703,7 +826,7 @@ class Graph{
 				cut.insert(edge);
 			}
 
-			unsigned long nodes_n = 1;
+			unsigned long nodes_n = 0;
 
 			while (nodes_n <= getNodesNumber()){
 
@@ -711,10 +834,14 @@ class Graph{
 				Edge *edge = *(cut.begin());
 				cut.erase(cut.begin());
 
-				// If it's still a border edge, add it at graph
-				if ((edge->from->test() xor edge->to->test()))
-				graph.g_edges.insert(*edge);
-
+				// If it's still a border edge, add it at graph and link to nodes
+				if ((edge->from->test() xor edge->to->test())){
+					Edge *e = (Edge *) malloc (sizeof(Edge));
+					e->weight = edge->weight;
+					e->isDirected = edge->isDirected;
+					e->addNodes(&graph.g_nodes[edge->from->label], &graph.g_nodes[edge->to->label]);
+					graph.g_edges.insert(*e);
+				}
 				// Go over border through this edge.
 				// If that node is marked, it's already inside.
 				Node* node2;
@@ -734,8 +861,9 @@ class Graph{
 						}
 					}
 				}
-				if (nodes_n == getNodesNumber()) break;
+				if (nodes_n >= getNodesNumber()) break;
 			}
+
 
 			float end = clock()/CLOCKS_PER_SEC;
 			ofstream operationsFile (OPERATIONSFILE_NAME, ofstream::app);
@@ -762,7 +890,42 @@ class Graph{
 			for (unsigned int i = 1; i <= g_nodes.size(); ++i) {
 				g_nodes[i].unflag();
 			}
+			return graph;
 		}
+
+		pair<float, vector<Node*> > solveTSP (string filename){
+			float cost = .0;
+
+			Graph g = this->prim(1,filename);
+			vector<Node *> path = g.dfs(1,filename);
+			cout << "End search\n";
+			path.push_back(path[0]);
+
+			/*cout << "\nPath:";
+			for (unsigned int i = 0; i < path.size(); i++)
+				cout << path[i]->label << " ";
+			cout << endl;*/
+
+			Edge edge;
+			for (unsigned int i = 0; i < path.size()-1; i++){
+				for (set<Edge *>::iterator it = g_nodes[path[i]->label].edges.begin(); it != g_nodes[path[i]->label].edges.end(); it++)
+					if (((*it)->to->label == path[i+1]->label)||((*it)->from->label == path[i+1]->label)) edge = **it;
+				cout << edge << endl;
+				cost += edge.weight + .0;
+			}
+			cout << "Cost: " << cost << endl;
+
+			if (filename != ""){
+				ofstream file ("tspg_"+filename, ofstream::out);
+				for (unsigned int i = 0; i < path.size()-1; i++)
+					file << path[i]->label << " ";
+				file << path[path.size()-1]->label;
+				file << endl << endl << cost << endl;
+			}
+
+			return make_pair(cost, path);
+		}
+
 };
 
 #endif
